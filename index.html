@@ -214,6 +214,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <button class="btn sec" id="fl">فقط در انتظار تأیید</button>
 <button class="btn" id="ex">خروجی اکسل (XLSX)</button>
 <button class="btn sec" id="exp">خروجی عکس‌ها</button>
+<button class="btn" id="expall">⬇ دانلود پوشه‌ی مدارک همه‌ی دبیران</button>
 </div>
 <div class="tw"><table><thead><tr><th>ردیف</th><th>عکس</th><th>نام</th><th>نام خانوادگی</th><th>کد پرسنلی</th><th>کد ملی</th><th>تلفن همراه</th><th>ساعت همکاری در هفته</th><th>وضعیت</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
 <div id="empty" class="banner hide">هنوز ثبت‌نامی انجام نشده است.</div>
@@ -975,57 +976,89 @@ async function formPdfBlob(p,sch,photoBlob){
     return pdf.output('blob');
   }finally{host.remove();if(purl)URL.revokeObjectURL(purl)}
 }
+const safeName=v=>String(v||'').replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim();
+const teacherFolderName=p=>safeName(`${p.first_name||''} ${p.last_name||''}`)||safeName(p.full_name)||p.personnel_code||'دبیر';
+const extOf=s=>((String(s||'').split('.').pop()||'').toLowerCase().replace(/[^a-z0-9]/g,''))||'bin';
+// مقصد ذخیره: پوشه‌ی انتخاب‌شده‌ی کاربر (یا zip اگر مرورگر پشتیبانی نکند)
+async function makeSink(dir){
+  if(dir)return{
+    mk:async n=>{const sub=await dir.getDirectoryHandle(n,{create:true});return async(name,blob)=>{const fh=await sub.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(blob);await w.close()}},
+    fin:async()=>false};
+  try{await loadLibJs('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',()=>window.JSZip)}
+  catch(e){throw new Error('بارگذاری ابزار فشرده‌سازی انجام نشد. اینترنت یا فیلترشکن را بررسی کنید.')}
+  const z=new JSZip();
+  return{
+    mk:async n=>{const f=z.folder(n);return async(name,blob)=>{f.file(name,blob)}},
+    fin:async zn=>{const blob=await z.generateAsync({type:'blob'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=safeName(zn)+'.zip';a.click();URL.revokeObjectURL(a.href);return true}};
+}
+// نوشتن فایل‌های یک دبیر: عکس + همه‌ی مدارک + PDF فرم مشخصات (با عکس در بالا)
+async function writeTeacherFiles(p,sch,put,prog){
+  const used={};
+  const uniq=n=>{if(!used[n]){used[n]=1;return n}used[n]++;const i=n.lastIndexOf('.');return i>0?`${n.slice(0,i)} (${used[n]})${n.slice(i)}`:`${n} (${used[n]})`};
+  let nDocs=0,failDocs=0,photoOk=false,pdfOk=false,photoBlob=null;
+  if(p.photo_path){
+    prog('عکس');
+    const {data}=await sb.storage.from('staff-docs').download(p.photo_path);
+    if(data){photoBlob=data;await put(uniq('عکس.'+extOf(p.photo_path)),data);photoOk=true}
+  }
+  const {data:docs,error:de}=await sb.from('documents').select('*').eq('user_id',p.id).order('created_at');
+  if(de)throw de;
+  for(const d of (docs||[])){
+    prog(`مدارک ${nDocs+failDocs+1} از ${docs.length}`);
+    try{
+      const {data,error}=await sb.storage.from('staff-docs').download(d.file_path);
+      if(error||!data)throw error||new Error('empty');
+      const fn=safeName(d.file_name)||('file.'+extOf(d.file_path));
+      await put(uniq(`${safeName(CATS[d.category]||d.category)} - ${fn}`),data);nDocs++;
+    }catch(e){failDocs++}
+  }
+  prog('ساخت PDF فرم');
+  try{const pdf=await formPdfBlob(p,sch,photoBlob);await put(uniq(`فرم مشخصات - ${teacherFolderName(p)}.pdf`),pdf);pdfOk=true}
+  catch(e){console.error(e)}
+  return{nDocs,failDocs,photoOk,pdfOk};
+}
+// یک دبیر (از جزئیات همان دبیر)
 async function downloadTeacherFolder(p,sch,btn){
   if(!p)return;
-  const safe=v=>String(v||'').replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim();
-  const folder=safe(`${p.first_name||''} ${p.last_name||''}`)||safe(p.full_name)||p.personnel_code||'دبیر';
-  // اول از همه (قبل از هر await) تا مرورگر پنجره‌ی انتخاب محل ذخیره را مجاز بداند
-  let dir=null;
+  let dir=null; // اول از همه، قبل از هر await
   if(window.showDirectoryPicker){try{dir=await showDirectoryPicker({mode:'readwrite'})}catch(e){if(e.name==='AbortError')return}}
   const old=btn.textContent;btn.disabled=true;btn.textContent='در حال آماده‌سازی…';
-  let zip=null,sub=null;
   try{
-    if(dir)sub=await dir.getDirectoryHandle(folder,{create:true});
-    else{
-      try{await loadLibJs('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',()=>window.JSZip)}
-      catch(e){alert('بارگذاری ابزار فشرده‌سازی انجام نشد. اینترنت یا فیلترشکن را بررسی کنید.');return}
-      zip=new JSZip().folder(folder);
-    }
-    const put=async(name,blob)=>{
-      if(sub){const fh=await sub.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(blob);await w.close()}
-      else zip.file(name,blob);
-    };
-    const used={};
-    const uniq=n=>{if(!used[n]){used[n]=1;return n}used[n]++;const i=n.lastIndexOf('.');return i>0?`${n.slice(0,i)} (${used[n]})${n.slice(i)}`:`${n} (${used[n]})`};
-    const extOf=s=>((String(s||'').split('.').pop()||'').toLowerCase().replace(/[^a-z0-9]/g,''))||'bin';
-    let nDocs=0,failDocs=0,photoOk=false,pdfOk=false,photoBlob=null;
-    if(p.photo_path){
-      btn.textContent='دریافت عکس…';
-      const {data}=await sb.storage.from('staff-docs').download(p.photo_path);
-      if(data){photoBlob=data;await put(uniq('عکس.'+extOf(p.photo_path)),data);photoOk=true}
-    }
-    const {data:docs,error:de}=await sb.from('documents').select('*').eq('user_id',p.id).order('created_at');
-    if(de)throw de;
-    for(const d of (docs||[])){
-      btn.textContent=`مدارک… ${nDocs+failDocs+1} از ${docs.length}`;
-      try{
-        const {data,error}=await sb.storage.from('staff-docs').download(d.file_path);
-        if(error||!data)throw error||new Error('empty');
-        const fn=safe(d.file_name)||('file.'+extOf(d.file_path));
-        await put(uniq(`${safe(CATS[d.category]||d.category)} - ${fn}`),data);nDocs++;
-      }catch(e){failDocs++}
-    }
-    btn.textContent='ساخت PDF فرم…';
-    try{const pdf=await formPdfBlob(p,sch,photoBlob);await put(uniq(`فرم مشخصات - ${folder}.pdf`),pdf);pdfOk=true}
-    catch(e){console.error(e)}
-    if(zip){
-      const blob=await zip.generateAsync({type:'blob'});
-      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=folder.replace(/[\\/:*?"<>|]/g,'_')+'.zip';a.click();URL.revokeObjectURL(a.href);
-    }
-    alert(`پوشه‌ی «${folder}» ${zip?'به‌صورت فایل فشرده دانلود':'ذخیره'} شد:\n• ${nDocs} مدرک`+(failDocs?` (${failDocs} مدرک دریافت نشد)`:'')+`\n• عکس: ${photoOk?'بله':'ثبت نشده یا دریافت نشد'}\n• PDF فرم مشخصات: ${pdfOk?'بله':'ساخته نشد (اینترنت یا فیلترشکن را بررسی کنید)'}`);
+    const folder=teacherFolderName(p),sink=await makeSink(dir),put=await sink.mk(folder);
+    const r=await writeTeacherFiles(p,sch,put,t=>{btn.textContent=t+'…'});
+    const z=await sink.fin(folder);
+    alert(`پوشه‌ی «${folder}» ${z?'به‌صورت فایل فشرده دانلود':'ذخیره'} شد:\n• ${r.nDocs} مدرک`+(r.failDocs?` (${r.failDocs} مدرک دریافت نشد)`:'')+`\n• عکس: ${r.photoOk?'بله':'ثبت نشده یا دریافت نشد'}\n• PDF فرم مشخصات: ${r.pdfOk?'بله':'ساخته نشد (اینترنت یا فیلترشکن را بررسی کنید)'}`);
   }catch(e){alert('ذخیره‌ی پوشه انجام نشد: '+(e&&e.message||e))}
   finally{btn.textContent=old;btn.disabled=false}
 }
+// همه‌ی دبیران: برای هر دبیر یک پوشه به نام خودش
+async function downloadAllFolders(people,sch,btn){
+  const L=(people||[]).filter(x=>x&&x.id);
+  if(!L.length){alert('دبیری در فهرست نیست.');return}
+  if(!confirm(`برای ${L.length} دبیر، هرکدام یک پوشه (مدارک + عکس + PDF فرم) ذخیره می‌شود. ممکن است چند دقیقه طول بکشد. ادامه می‌دهید؟`))return;
+  let dir=null; // اول از همه، قبل از هر await
+  if(window.showDirectoryPicker){try{dir=await showDirectoryPicker({mode:'readwrite'})}catch(e){if(e.name==='AbortError')return}}
+  const old=btn.textContent;btn.disabled=true;btn.textContent='در حال آماده‌سازی…';
+  try{
+    const sink=await makeSink(dir),usedF={};
+    let docs=0,photos=0,pdfs=0,failT=0,i=0;
+    for(const p of L){
+      i++;
+      let name=teacherFolderName(p);
+      if(usedF[name])name+=' - '+(p.personnel_code||p.national_id||usedF[name]+1);
+      usedF[teacherFolderName(p)]=(usedF[teacherFolderName(p)]||0)+1;
+      try{
+        const put=await sink.mk(name);
+        const r=await writeTeacherFiles(p,sch,put,t=>{btn.textContent=`دبیر ${i} از ${L.length}: ${t}`});
+        docs+=r.nDocs;if(r.photoOk)photos++;if(r.pdfOk)pdfs++;
+      }catch(e){failT++;console.error(e)}
+    }
+    const z=await sink.fin('مدارک-دبیران');
+    alert(`${z?'فایل فشرده دانلود':'ذخیره'} شد.\n• دبیران: ${L.length-failT} از ${L.length}\n• مدارک: ${docs}\n• عکس: ${photos}\n• PDF فرم: ${pdfs}`+(failT?`\n• ${failT} دبیر ذخیره نشد.`:''));
+  }catch(e){alert('ذخیره انجام نشد: '+(e&&e.message||e))}
+  finally{btn.textContent=old;btn.disabled=false}
+}
+$('#expall').onclick=e=>downloadAllFolders(list,me&&me.admin_school,e.currentTarget);
 $('#prt').onclick=()=>{if(!me||!me.full_name||!me.national_id){alert('ابتدا اطلاعات فرم را ثبت کنید.');return}const sc=isAdm()?me.admin_school:(coopSel||(mems[0]||{}).school);printForm({...me,...(isAdm()?{}:coopDetails(sc))},sc)};
 
 // ---- پنل مدیر ----
