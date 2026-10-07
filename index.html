@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
-:root{--bg:#fffbe3;--card:#fff3b0;--tx:#26210b;--mu:#6a5d1c;--br:#d8c564;--pr:#2457c5;--prt:#fff;--ok:#117a45;--wn:#a15c07;--me:#f7e27a;--ot:#fff7c9}
+:root{--bg:#eef2f8;--card:#d3dcea;--tx:#1b2433;--mu:#4a5870;--br:#a9b7cc;--pr:#2457c5;--prt:#fff;--ok:#117a45;--wn:#a15c07;--me:#bcd0f2;--ot:#e4eaf4}
 .pwwrap{position:relative}
 .pwwrap input{padding-left:42px}
 .eye{position:absolute;left:6px;top:50%;transform:translateY(-50%);background:none;border:0;cursor:pointer;font-size:18px;line-height:1;padding:4px;color:var(--tx)}
@@ -68,9 +68,9 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <section id="auth" class="card">
 <div id="a_home">
 <h3 style="margin-top:0;text-align:center">به پورتال مدارس خوش آمدید</h3>
-<div class="banner" style="text-align:center;line-height:2">🏫 متوسطه اول راز (شیفت صبح)<br>🏫 متوسطه اول مهرآفرینان (شیفت عصر)</div>
+<div class="banner" id="home_schools" style="text-align:center;line-height:2"></div>
 <div class="row" style="justify-content:center;margin:14px 0"><button class="btn big" id="go_stu">ورود دانش‌آموز</button><button class="btn big" id="go_tch">ورود دبیران</button></div>
-<div class="row" style="justify-content:center"><button class="btn sec sm" id="go_adm_raz">ورود مدیر مدرسه راز</button><button class="btn sec sm" id="go_adm_mehr">ورود مدیر مدرسه مهرآفرینان</button></div>
+<div class="row" id="home_adm" style="justify-content:center"></div>
 <div style="text-align:left;margin-top:6px"><span id="lock" style="font-size:11px;opacity:.28;cursor:default;user-select:none">🔒</span></div>
 </div>
 <div id="a_login" class="hide">
@@ -189,6 +189,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <div class="grid" style="max-width:640px"><div><label>نوع مدرک</label><select id="dcat"></select></div>
 <div><label>فایل (PDF یا عکس، حداکثر ۱۰ مگابایت؛ عکس‌ها خودکار کم‌حجم می‌شوند)</label><input type="file" id="dfile" accept=".pdf,.jpg,.jpeg,.png,.webp"></div></div>
 <div class="err" id="derr"></div><button class="btn" id="dup">ارسال مدرک</button>
+<div class="row" style="margin:10px 0"><button class="btn sec" id="dl_mine">⬇ دانلود پوشه کامل من (مدارک، عکس و PDF فرم)</button></div>
 <h3>مدارک ارسال‌شده</h3><div id="dlist" class="tw"></div>
 </section>
 
@@ -214,7 +215,8 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <button class="btn sec" id="fl">فقط در انتظار تأیید</button>
 <button class="btn" id="ex">خروجی اکسل (XLSX)</button>
 <button class="btn sec" id="exp">خروجی عکس‌ها</button>
-<button class="btn" id="expall">⬇ دانلود پوشه‌ی مدارک همه‌ی دبیران</button>
+<button class="btn" id="exall">⬇ دانلود پوشه کامل همه دبیران</button>
+<button class="btn sec" id="delall_t" style="color:#c0392b">🗑 حذف تمام همکاران</button>
 </div>
 <div class="tw"><table><thead><tr><th>ردیف</th><th>عکس</th><th>نام</th><th>نام خانوادگی</th><th>کد پرسنلی</th><th>کد ملی</th><th>تلفن همراه</th><th>ساعت همکاری در هفته</th><th>وضعیت</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
 <div id="empty" class="banner hide">هنوز ثبت‌نامی انجام نشده است.</div>
@@ -226,7 +228,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <div class="row" style="margin-top:8px"><button class="btn sm" id="imp_s_pick">انتخاب فایل اکسل</button><button class="btn sec sm" id="imp_s_tpl">دانلود قالب نمونه</button><button class="btn sec sm" id="imp_s_help">📘 راهنما</button><input type="file" id="imp_s_file" accept=".xlsx" class="hide"></div>
 <div id="imp_s_cnt" style="margin-top:6px;font-size:13px"></div><div id="imp_s_res" style="margin-top:6px;font-size:13px"></div></div>
 <div class="banner">تأیید درخواست‌های ثبت‌نام (همکار و دانش‌آموز) در تب «پنل دبیران» انجام می‌شود.</div>
-<div class="row" style="margin-bottom:10px"><input id="sq" placeholder="جستجو: نام یا کد ملی" style="flex:1;min-width:180px"><button class="btn sec" id="srf">بازخوانی</button><button class="btn" id="sex">خروجی اکسل (XLSX)</button><button class="btn sec" id="sexp">خروجی عکس‌ها</button></div>
+<div class="row" style="margin-bottom:10px"><input id="sq" placeholder="جستجو: نام یا کد ملی" style="flex:1;min-width:180px"><button class="btn sec" id="srf">بازخوانی</button><button class="btn" id="sex">خروجی اکسل (XLSX)</button><button class="btn sec" id="sexp">خروجی عکس‌ها</button><button class="btn sec" id="delall_s" style="color:#c0392b">🗑 حذف اطلاعات همه دانش‌آموزان</button></div>
 <div class="tw"><table><thead><tr><th>ردیف</th><th>عکس</th><th>کد ملی</th><th>نام</th><th>نام خانوادگی</th><th>نام پدر</th><th>تاریخ تولد</th><th>سریال شناسنامه</th><th>تلفن مادر</th><th>تلفن پدر</th><th>پرونده</th></tr></thead><tbody id="stb"></tbody></table></div>
 </section>
 
@@ -246,7 +248,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <script>
 // ===== تنظیمات: مقادیر را از Supabase > Project Settings > API کپی کنید =====
 const SUPABASE_URL='https://odmcclrogikaloiwvcia.supabase.co';
-const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kbWNjbHJvZ2lrYWxvaXd2Y2lhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNTk3MTYsImV4cCI6MjEwNjYzNTcxNn0.dH_ZKlqkJ9F_8ig-z6EwzMnHfEUWc1s9_Q_Eh8HJ7pY';
+const SUPABASE_ANON_KEY='sb_publishable_zE1PiEm8pKIBSICnqXDwPA_T6xylF-3';
 // ایمیل داخلی حساب‌ها (ایمیل واقعی ارسال نمی‌شود). از نشانی Gmail خودتان استفاده می‌شود:
 const EMAIL_BASE='babakbahramipour', EMAIL_DOMAIN='gmail.com';
 // پیام‌ها و فایل‌های چت قدیمی‌تر از این تعداد روز خودکار پاک می‌شوند
@@ -269,8 +271,14 @@ const checked=id=>[...document.querySelectorAll(id+' input:checked')].map(i=>i.v
 function validId(c){if(!/^\d{10}$/.test(c)||/^(\d)\1{9}$/.test(c))return false;let s=0;for(let i=0;i<9;i++)s+=+c[i]*(10-i);const r=s%11;return +c[9]===(r<2?r:11-r)}
 
 // ---- ورود و ثبت‌نام ----
-const SCH={raz:{n:'متوسطه اول راز',s:'شیفت صبح'},mehr:{n:'متوسطه اول مهرآفرینان',s:'شیفت عصر'}};
-const schName=k=>SCH[k]?`${SCH[k].n} (${SCH[k].s})`:'';
+let SCH={};
+const schName=k=>SCH[k]?(SCH[k].s?`${SCH[k].n} (${SCH[k].s})`:SCH[k].n):'';
+const actCodes=()=>Object.keys(SCH).filter(k=>SCH[k].a);
+async function loadSchools(){const {data}=await sb.from('schools').select('code,name,shift,active').order('created_at');SCH={};(data||[]).forEach(x=>{SCH[x.code]={n:x.name,s:x.shift||'',a:x.active}})}
+function renderHome(){const a=actCodes();
+  $('#home_schools').innerHTML=a.length?a.map(k=>'🏫 '+esc(schName(k))).join('<br>'):'هنوز مدرسه‌ای فعال نشده است. سازنده باید مدرسه‌ها را در پنل سازنده تعریف و فعال کند.';
+  $('#home_adm').innerHTML=a.map(k=>`<button class="btn sec sm" data-ak="${esc(k)}">ورود مدیر ${esc(SCH[k].n)}</button>`).join('');
+  $('#home_adm').querySelectorAll('button').forEach(b=>b.onclick=()=>openLogin('admin:'+b.dataset.ak))}
 let ctx={scope:'',regs:[]};
 function aview(v){['a_home','a_login','a_reg'].forEach(x=>$('#'+x).classList.toggle('hide',x!==v));$('#aerr').textContent='';$('#rerr').textContent=''}
 function aerr(m,good){const e=$('#aerr');e.textContent=m;e.style.color=good?'var(--ok)':'#c0392b'}
@@ -284,8 +292,8 @@ function openLogin(scope){
   $('#al_pl').textContent=(scope==='student'||scope==='teacher')?'رمز عبور (برای بار اول: همان '+(scope==='student'?'کد ملی':'کد پرسنلی')+')':'رمز عبور';
   const rg=$('#al_reg');
   if(scope==='student'||scope==='teacher'){
-    const opts=scope==='student'?[['raz'],['mehr']]:[['raz'],['mehr'],['raz','mehr']];
-    $('#al_regbtns').innerHTML=opts.map(o=>`<button class="btn sec" data-rg="${o.join(',')}">${o.length===2?'ثبت نام در هر دو مدرسه (راز و مهرآفرینان)':'ثبت نام در مدرسه '+schName(o[0])}</button>`).join('');
+    const ac=actCodes(),opts=ac.map(c=>[c]);if(scope==='teacher')for(let i=0;i<ac.length;i++)for(let j=i+1;j<ac.length;j++)opts.push([ac[i],ac[j]]);
+    $('#al_regbtns').innerHTML=opts.map(o=>`<button class="btn sec" data-rg="${o.join(',')}">${o.length===2?'ثبت نام در هر دو مدرسه ('+o.map(x=>SCH[x].n).join(' و ')+')':'ثبت نام در مدرسه '+schName(o[0])}</button>`).join('');
     $('#al_regbtns').querySelectorAll('button').forEach(b=>b.onclick=()=>openReg(b.dataset.rg.split(',')));
     rg.classList.remove('hide');
   }else rg.classList.add('hide');
@@ -300,7 +308,7 @@ function openReg(schools){
   ['rc','rfn','rln','rm'].forEach(i=>$('#'+i).value='');aview('a_reg');
 }
 $('#go_stu').onclick=()=>openLogin('student');$('#go_tch').onclick=()=>openLogin('teacher');
-$('#go_adm_raz').onclick=()=>openLogin('admin:raz');$('#go_adm_mehr').onclick=()=>openLogin('admin:mehr');
+
 $('#al_back').onclick=()=>aview('a_home');$('#ar_back').onclick=()=>aview('a_login');
 let taps=0,tapT=0;$('#lock').onclick=()=>{const n=Date.now();taps=(n-tapT<2000)?taps+1:1;tapT=n;if(taps>=5){taps=0;openLogin('creator')}};
 $('#li').onclick=async()=>{
@@ -328,6 +336,8 @@ $('#rb').onclick=async()=>{
   const {data,error}=await sb.rpc('register_person',{p_kind:k,p_code:c,p_first:fn,p_last:ln,p_mobile:m,p_schools:ctx.regs});
   if(error){e.textContent='ثبت نشد: '+error.message;return}
   if(data==='imported'){e.textContent='اطلاعات شما قبلاً توسط مدرسه ثبت شده است. از بخش ورود، کد را هم به‌عنوان نام کاربری و هم رمز وارد کنید.';return}
+  if(data==='active'){e.textContent='با این کد قبلاً ثبت‌نام کرده‌اید و حساب دارید. از بخش ورود، کد را به‌عنوان نام کاربری و رمز وارد کنید.';return}
+  if(data==='pending'){e.textContent='درخواست شما قبلاً ثبت شده و در انتظار تأیید مدیر است.';return}
   if(data==='exists'){e.textContent='برای این کد قبلاً درخواست ثبت شده است.';return}
   if(data!=='ok'){e.textContent='اطلاعات نامعتبر است.';return}
   e.style.color='var(--ok)';e.textContent='درخواست شما برای '+ctx.regs.map(schName).join(' و ')+' ثبت شد و برای مدیر ارسال می‌شود. پس از تأیید، با '+(st?'کد ملی':'کد پرسنلی')+' (به‌عنوان نام کاربری و رمز اولیه) وارد شوید.'};
@@ -342,9 +352,10 @@ $('#pb').onclick=async()=>{const a=dig($('#np1').value),e=$('#perr');e.style.col
   $('#np1').value=$('#np2').value='';e.style.color='var(--ok)';e.textContent='رمز با موفقیت تغییر کرد.';render()};
 
 if(initErr){['li','rb','go_stu','go_tch'].forEach(i=>$('#'+i).disabled=true);aerr(initErr==='lib'?'کتابخانه Supabase بارگذاری نشد. اینترنت یا فیلترشکن را بررسی کنید.':'SUPABASE_URL درست وارد نشده است. باید شبیه https://xxxx.supabase.co باشد، بدون / آخر و بدون rest/v1.')}
-else sb.auth.onAuthStateChange((ev,s)=>{if(ev==='TOKEN_REFRESHED')return;if(ev==='PASSWORD_RECOVERY')tab='acct';setTimeout(()=>onSession(s),0)});
+else{loadSchools().then(renderHome).catch(()=>{});sb.auth.onAuthStateChange((ev,s)=>{if(ev==='TOKEN_REFRESHED')return;if(ev==='PASSWORD_RECOVERY')tab='acct';setTimeout(()=>onSession(s),0)})}
 
 async function onSession(s){
+  try{await loadSchools();renderHome()}catch(e){}
   if(chan){sb.removeChannel(chan);chan=null}
   if(!s){me=null;msgs=[];list=[];mems=[];lastUid=null;filled=false;aview('a_home');$('#auth').classList.remove('hide');$('#app').classList.add('hide');$('#out').classList.add('hide');$('#who').classList.add('hide');return}
   const {data,error:pe}=await sb.from('profiles').select('*').eq('id',s.user.id).single();
@@ -738,9 +749,9 @@ function renderCoop(){
     $('#coop_status').textContent='مدرسه '+schName(m.school)+' – '+(m.status==='approved'?'تأییدشده':m.status==='rejected'?'رد شده':'در انتظار تأیید مدیر');
     if(!coopFilled){fillCoopFrom(m.details||{});coopFilled=true}
     const o=mems.find(x=>x.school!==m.school&&x.status==='approved'),cp=$('#coop_copy');
-    cp.classList.toggle('hide',!(o&&m.status==='approved'));if(o)cp.textContent='کپی اطلاعات همکاری از مدرسه '+SCH[o.school].n;
+    cp.classList.toggle('hide',!(o&&m.status==='approved'));if(o)cp.textContent='کپی اطلاعات همکاری از مدرسه '+(SCH[o.school]||{n:''}).n;
   }
-  const miss=['raz','mehr'].filter(k=>!mems.some(x=>x.school===k));
+  const miss=actCodes().filter(k=>!mems.some(x=>x.school===k));
   $('#coop_req').classList.toggle('hide',!miss.length);
   $('#coop_req').innerHTML=miss.map(k=>`<button class="btn sec" data-rq="${k}">درخواست همکاری در مدرسه ${esc(schName(k))}</button>`).join('');
   $('#coop_req').querySelectorAll('button').forEach(b=>b.onclick=async()=>{
@@ -766,30 +777,50 @@ $('#coop_save').onclick=async()=>{
 };
 $('#coop_copy').onclick=()=>{
   const o=mems.find(x=>x.school!==coopSel&&x.status==='approved');if(!o)return;
-  if(!confirm('اطلاعات همکاری از مدرسه '+SCH[o.school].n+' در این مدرسه کپی شود؟ سپس روزها و ساعت همکاری را تغییر دهید و ثبت کنید.'))return;
+  if(!confirm('اطلاعات همکاری از مدرسه '+(SCH[o.school]||{n:''}).n+' در این مدرسه کپی شود؟ سپس روزها و ساعت همکاری را تغییر دهید و ثبت کنید.'))return;
   fillCoopFrom(o.details||{});const e=$('#coop_err');e.style.color='var(--ok)';e.textContent='کپی شد. روزها و ساعت همکاری را اصلاح کنید و «ثبت» را بزنید.'};
 $('#chs').onchange=async()=>{chatSchool=$('#chs').value;await loadMsgs();renderChat()};
 
 // ---- پنل سازنده ----
 async function renderCreator(){
-  const out=[];
-  for(const k of ['raz','mehr']){
+  await loadSchools();
+  const ad=await sb.from('profiles').select('id,admin_school,username,full_name').eq('role','admin');const admins=ad.data||[];
+  $('#cr_stats').innerHTML='<b>مدارس تعریف‌شده</b> – هر مدرسه پس از «فعال کردن» در صفحه اول نمایش داده می‌شود و ثبت‌نام و ورود مدیرش ممکن می‌شود.';
+  let h=`<div class="banner"><b>افزودن مدرسه جدید</b><div class="row" style="margin-top:8px"><input id="ns_n" placeholder="نام مدرسه" style="max-width:240px"><input id="ns_s" placeholder="شیفت (اختیاری، مثل شیفت صبح)" style="max-width:220px"><button class="btn sm" id="ns_add">افزودن (به‌صورت غیرفعال)</button></div></div>`;
+  for(const k of Object.keys(SCH)){const s0=SCH[k];
     const a=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('role','student').eq('school',k);
     const b=await sb.from('memberships').select('user_id',{count:'exact',head:true}).eq('school',k).eq('status','approved');
     const c=await sb.from('memberships').select('user_id',{count:'exact',head:true}).eq('school',k).eq('status','pending');
-    out.push(`<div><b>${esc(schName(k))}</b>: دانش‌آموز ${a.count||0} | دبیر تأییدشده ${b.count||0} | دبیر در انتظار ${c.count||0}</div>`)}
-  $('#cr_stats').innerHTML=out.join('');
-  const ad=await sb.from('profiles').select('id,admin_school,username,full_name').eq('role','admin');
-  $('#cr_admins').innerHTML=['raz','mehr'].map(k=>{const a=(ad.data||[]).find(x=>x.admin_school===k);
-    return `<div class="banner"><b>مدیر مدرسه ${esc(schName(k))}</b><br>`+(a?`نام کاربری فعلی: <span dir="ltr">${esc(a.username)}</span>${a.full_name?' | '+esc(a.full_name):''}<div class="row" style="margin-top:8px"><input id="cun_${k}" class="ltr" placeholder="نام کاربری جدید" style="max-width:200px"><button class="btn sm" data-cu="${k}">تغییر نام کاربری</button></div><div class="row" style="margin-top:8px"><button class="btn sm" data-cr="${k}">تعیین رمز جدید برای مدیر</button><input id="cpw_${k}" class="ltr" placeholder="یا رمز دلخواه (حداقل ۸ نویسه)" style="max-width:240px"><button class="btn sec sm" data-cs2="${k}">تعیین رمز دلخواه</button></div>`:'حساب این مدیر هنوز ساخته نشده است.')+'</div>'}).join('');
-  const go=async(k,pw)=>{const {error}=await sb.rpc('creator_reset_admin',{p_school:k,p_password:pw});
-    alert(error?'انجام نشد: '+error.message:(pw?'رمز مدیر تعیین شد.':'رمز مدیر به رمز اولیه بازنشانی شد.'))};
-  $('#cr_admins').querySelectorAll('[data-cr]').forEach(b=>b.onclick=()=>{{const v=dig(prompt('رمز جدید مدیر (حداقل ۸ نویسه):')||'');if(v.length<8){alert('رمز باید حداقل ۸ نویسه باشد.');return}go(b.dataset.cr,v)}});
-  $('#cr_admins').querySelectorAll('[data-cs2]').forEach(b=>b.onclick=()=>{const v=dig(document.getElementById('cpw_'+b.dataset.cs2).value);if(v.length<8){alert('رمز باید حداقل ۸ نویسه باشد.');return}go(b.dataset.cs2,v)});
-  $('#cr_admins').querySelectorAll('[data-cu]').forEach(b=>b.onclick=async()=>{const v=dig(document.getElementById('cun_'+b.dataset.cu).value);
+    const ad1=admins.find(x=>x.admin_school===k);
+    h+=`<div class="banner"><b>${esc(s0.n)}</b> <span class="tag ${s0.a?'ok':'wn'}">${s0.a?'فعال':'غیرفعال'}</span><br>دانش‌آموز ${a.count||0} | دبیر تأییدشده ${b.count||0} | دبیر در انتظار ${c.count||0}
+    <div class="row" style="margin-top:8px"><input id="en_${esc(k)}" value="${esc(s0.n)}" style="max-width:240px"><input id="es_${esc(k)}" value="${esc(s0.s)}" placeholder="شیفت" style="max-width:160px"><button class="btn sm" data-se="${esc(k)}">ذخیره نام و شیفت</button><button class="btn sec sm" data-st="${esc(k)}">${s0.a?'غیرفعال کردن':'فعال کردن'}</button></div>`+
+    (ad1?`<div style="margin-top:8px">مدیر: نام کاربری <span dir="ltr">${esc(ad1.username)}</span>${ad1.full_name?' | '+esc(ad1.full_name):''}</div>
+    <div class="row" style="margin-top:8px"><input id="cun_${esc(k)}" class="ltr" placeholder="نام کاربری جدید" style="max-width:200px"><button class="btn sm" data-cu="${esc(k)}">تغییر نام کاربری</button></div>
+    <div class="row" style="margin-top:8px"><input id="cpw_${esc(k)}" class="ltr" placeholder="رمز جدید (حداقل ۸ نویسه)" style="max-width:240px"><button class="btn sec sm" data-cs2="${esc(k)}">تعیین رمز مدیر</button></div>`
+    :`<div style="margin-top:8px">این مدرسه هنوز مدیر ندارد:</div><div class="row" style="margin-top:8px"><input id="cau_${esc(k)}" class="ltr" placeholder="نام کاربری مدیر" style="max-width:180px"><input id="cap_${esc(k)}" class="ltr" placeholder="رمز (حداقل ۸ نویسه)" style="max-width:200px"><button class="btn sm" data-ca="${esc(k)}">ساخت مدیر</button></div>`)+`</div>`}
+  const box=$('#cr_admins');box.innerHTML=h;
+  const fail=e=>alert('انجام نشد: '+e.message);
+  $('#ns_add').onclick=async()=>{const n=$('#ns_n').value.trim();if(n.length<2){alert('نام مدرسه را وارد کنید.');return}
+    const {error}=await sb.rpc('creator_save_school',{p_code:null,p_name:n,p_shift:$('#ns_s').value.trim(),p_active:false});if(error)return fail(error);renderCreator()};
+  box.querySelectorAll('[data-se]').forEach(b=>b.onclick=async()=>{const k=b.dataset.se;
+    const {error}=await sb.rpc('creator_save_school',{p_code:k,p_name:$('#en_'+k).value,p_shift:$('#es_'+k).value,p_active:SCH[k].a});if(error)return fail(error);renderCreator()});
+  box.querySelectorAll('[data-st]').forEach(b=>b.onclick=async()=>{const k=b.dataset.st,on=!SCH[k].a;
+    if(!confirm(on?'مدرسه فعال شود؟':'مدرسه غیرفعال شود؟ مدیر آن دیگر نمی‌تواند وارد شود و ثبت‌نام جدید بسته می‌شود.'))return;
+    const {error}=await sb.rpc('creator_save_school',{p_code:k,p_name:SCH[k].n,p_shift:SCH[k].s,p_active:on});if(error)return fail(error);renderCreator()});
+  box.querySelectorAll('[data-ca]').forEach(b=>b.onclick=async()=>{const k=b.dataset.ca,u=dig($('#cau_'+k).value),pw=dig($('#cap_'+k).value);
+    if(!/^[A-Za-z0-9_.@-]{3,40}$/.test(u)){alert('نام کاربری باید ۳ تا ۴۰ نویسه و فقط شامل حروف انگلیسی، عدد و _ . - @ باشد.');return}
+    if(pw.length<8){alert('رمز باید حداقل ۸ نویسه باشد.');return}
+    b.disabled=true;const email=`${EMAIL_BASE}+adm-${k}@${EMAIL_DOMAIN}`;
+    const r=await sb.rpc('creator_prepare_admin',{p_school:k,p_email:email,p_username:u});if(r.error){b.disabled=false;return fail(r.error)}
+    const tmp=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
+    const su=await tmp.auth.signUp({email,password:pw});if(su.error){b.disabled=false;return fail(su.error)}
+    alert('مدیر مدرسه ساخته شد.');renderCreator()});
+  const go=async(k,pw)=>{const {error}=await sb.rpc('creator_reset_admin',{p_school:k,p_password:pw});alert(error?'انجام نشد: '+error.message:'رمز مدیر تعیین شد.')};
+  box.querySelectorAll('[data-cs2]').forEach(b=>b.onclick=()=>{const v=dig($('#cpw_'+b.dataset.cs2).value);if(v.length<8){alert('رمز باید حداقل ۸ نویسه باشد.');return}go(b.dataset.cs2,v)});
+  box.querySelectorAll('[data-cu]').forEach(b=>b.onclick=async()=>{const v=dig($('#cun_'+b.dataset.cu).value);
     if(!/^[A-Za-z0-9_.@-]{3,40}$/.test(v)){alert('نام کاربری باید ۳ تا ۴۰ نویسه و فقط شامل حروف انگلیسی، عدد و _ . - @ باشد.');return}
     const {error}=await sb.rpc('creator_set_admin_username',{p_school:b.dataset.cu,p_username:v});
-    if(error){alert('انجام نشد: '+error.message);return}alert('نام کاربری تغییر کرد.');renderCreator()});
+    if(error)return fail(error);alert('نام کاربری تغییر کرد.');renderCreator()});
 }
 
 async function wipeFolder(bucket,uid){try{const {data}=await sb.storage.from(bucket).list(uid,{limit:1000});if(data&&data.length)await sb.storage.from(bucket).remove(data.map(f=>uid+'/'+f.name))}catch(e){}}
@@ -887,6 +918,117 @@ function showImportHelp(kind){
 $('#imp_t_help').onclick=()=>showImportHelp('teacher');
 $('#imp_s_help').onclick=()=>showImportHelp('student');
 
+// ---- دانلود پوشه کامل دبیر (مدارک + عکس + PDF فرم با عکس) ----
+const LIBS={h2c:'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',pdf:'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',zip:'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js'};
+function loadLib(src,test){return new Promise((ok,no)=>{if(test())return ok();const t=document.createElement('script');t.src=src;t.onload=ok;t.onerror=()=>no(new Error('load '+src));document.head.append(t)})}
+const safeName=v=>String(v||'').replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim().slice(0,80);
+const extOf=pth=>(String(pth).split('.').pop()||'bin').toLowerCase();
+function teacherRows(p){
+  const ex=p.teacher_extra||{};
+  return [['نام',p.first_name],['نام خانوادگی',p.last_name],['کد ملی',p.national_id],['کد پرسنلی',p.personnel_code],['تلفن همراه',p.mobile],['تلفن ثابت',p.home_phone],['تلفن اضطراری',p.emergency_phone],['مدرک تحصیلی',p.degree],['رشته تحصیلی',p.field_of_study],['رشته تدریس',p.teaching_field],['سمت',p.position],['وضعیت همکاری',p.emp_status],['سابقه خدمت (سال)',p.service_years],['ساعت تدریس در هفته',p.weekly_hours],['ساعت موظف',p.mandatory_hours],['ساعت غیرموظف',p.extra_hours],['پایه‌های تدریس',fv(p.grades)],['روزهای همکاری',fv(p.work_days)],['نام همسر',p.spouse_name],['شغل همسر',p.spouse_job],['تلفن همسر',p.spouse_phone],['تعداد فرزند',p.children],['آدرس',p.address],
+    ...TSTATIC.map(([k,l])=>[l,ex[k]]),...TSEC.flatMap(x=>x[1]).map(([k,l])=>[l,fv(ex[k])]).filter(r=>r[1])];
+}
+async function formPdfBlob(p,sch,photoBlob){
+  await loadLib(LIBS.h2c,()=>window.html2canvas);await loadLib(LIBS.pdf,()=>window.jspdf);
+  const url=photoBlob?URL.createObjectURL(photoBlob):'';
+  const host=document.createElement('div');
+  host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#000;padding:26px 30px;box-sizing:border-box;direction:rtl;font-family:Vazirmatn,Tahoma,sans-serif;line-height:1.7';
+  host.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px"><div style="width:113px;height:151px"></div><div style="flex:1;text-align:center"><div style="font-size:22px;font-weight:700">فرم مشخصات همکار</div>${sch?`<div style="font-size:16px;margin:2px 0">مدرسه ${esc(fa(schName(sch)))}</div>`:''}<div style="font-size:12px">تاریخ تهیه: ${new Date().toLocaleDateString('fa-IR')}</div></div><div style="width:113px;height:151px">${url?`<img src="${url}" style="width:113px;height:151px;object-fit:cover;border:1px solid #444" alt="">`:''}</div></div>
+<style>.ft{width:100%;border-collapse:collapse;table-layout:fixed}.ft td{border:1px solid #444;padding:3px 6px;font-size:12px;line-height:1.5;vertical-align:top;word-break:break-word}.ft td.k{background:#eee;font-weight:600}</style><table class="ft"><colgroup><col style="width:15%"><col style="width:35%"><col style="width:15%"><col style="width:35%"></colgroup>${compactRowsHtml(teacherRows(p))}</table>
+<div style="display:flex;justify-content:space-between;margin-top:22px;font-size:13px"><span>امضای همکار</span><span>امضای مدیر</span></div>`;
+  document.body.append(host);
+  const im=host.querySelector('img');if(im&&!im.complete)await new Promise(r=>{im.onload=im.onerror=r});
+  try{await document.fonts.ready}catch(e){}
+  const canvas=await html2canvas(host,{scale:2,backgroundColor:'#ffffff',useCORS:true});
+  host.remove();if(url)URL.revokeObjectURL(url);
+  const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4',orientation:'p'});
+  const pw=210,ph=297;let w=pw,h=canvas.height*pw/canvas.width;
+  if(h>ph){w=pw*ph/h;h=ph}
+  pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',(pw-w)/2,0,w,h);
+  return pdf.output('blob');
+}
+async function exportTeacherFolders(people,btn,sch,zipName){
+  if(!people.length){alert('دبیری برای دریافت وجود ندارد.');return}
+  let dir=null;
+  if(window.showDirectoryPicker){try{dir=await showDirectoryPicker({mode:'readwrite'})}catch(e){if(e.name==='AbortError')return}}
+  let zip=null;
+  if(!dir){try{await loadLib(LIBS.zip,()=>window.JSZip)}catch(e){alert('بارگذاری ابزار فشرده‌سازی انجام نشد. اینترنت یا فیلترشکن را بررسی کنید.');return}zip=new JSZip()}
+  const old=btn.textContent;btn.disabled=true;const used={};let ok=0,fail=0,lastErr='';
+  for(let i=0;i<people.length;i++){
+    const p=people[i];btn.textContent='در حال آماده‌سازی… '+(i+1)+' از '+people.length;
+    try{
+      let fn=safeName((p.first_name||'')+' '+(p.last_name||''))||safeName(p.full_name)||'بدون نام';
+      if(used[fn]){used[fn]++;fn+=' ('+used[fn]+')'}else used[fn]=1;
+      const sub=dir?await dir.getDirectoryHandle(fn,{create:true}):null;
+      const put=async(name,blob)=>{if(dir){const fh=await sub.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(blob);await w.close()}else zip.file(fn+'/'+name,blob)};
+      let photo=null;
+      if(p.photo_path){const r=await sb.storage.from('staff-docs').download(p.photo_path);if(!r.error)photo=r.data}
+      if(photo)await put('عکس پرسنلی - '+fn+'.'+extOf(p.photo_path),photo);
+      await put('فرم مشخصات - '+fn+'.pdf',await formPdfBlob(p,sch,photo));
+      const ds=await sb.from('documents').select('*').eq('user_id',p.id).order('created_at');
+      const dn={};
+      for(const d of ds.data||[]){
+        const r=await sb.storage.from('staff-docs').download(d.file_path);if(r.error)continue;
+        let nm=safeName((CATS[d.category]||d.category)+' - '+String(d.file_name||'').replace(/\.[^.]+$/,''))+'.'+extOf(d.file_path);
+        if(dn[nm]){dn[nm]++;nm=nm.replace(/(\.[^.]+)$/,' ('+dn[nm]+')$1')}else dn[nm]=1;
+        await put(nm,r.data);
+      }
+      ok++;
+    }catch(e){fail++;lastErr=e&&e.message||String(e)}
+  }
+  if(zip){const blob=await zip.generateAsync({type:'blob'});const nm=prompt('نام فایل فشرده را وارد کنید:',zipName||'پوشه-دبیران');
+    if(nm!==null){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(safeName(nm)||'پوشه-دبیران')+'.zip';a.click();URL.revokeObjectURL(a.href)}}
+  btn.textContent=old;btn.disabled=false;
+  alert(ok+' پوشه ساخته شد'+(fail?' و '+fail+' مورد انجام نشد ('+lastErr+').':'.'));
+}
+$('#exall').onclick=e=>exportTeacherFolders(list,e.currentTarget,me.admin_school,'پوشه-همه-دبیران');
+$('#dl_mine').onclick=e=>{const sc=coopSel||(mems[0]||{}).school;exportTeacherFolders([{...me,...coopDetails(sc)}],e.currentTarget,sc,'پوشه-من')};
+
+// ---- فرم فشرده (۴ ستون) ----
+function compactRowsHtml(rows){
+  const it=rows.map(([k,v])=>[k,esc(fa(String(v==null?'':v)))]);
+  const pr=(a,b)=>`<tr><td class="k">${a[0]}</td><td>${a[1]}</td>${b?`<td class="k">${b[0]}</td><td>${b[1]}</td>`:'<td class="k"></td><td></td>'}</tr>`;
+  let out='',buf=null;
+  for(const x of it){
+    if(x[1].length>32){if(buf){out+=pr(buf,null);buf=null}out+=`<tr><td class="k">${x[0]}</td><td colspan="3">${x[1]}</td></tr>`}
+    else if(buf){out+=pr(buf,x);buf=null}else buf=x;
+  }
+  if(buf)out+=pr(buf,null);
+  return out;
+}
+// ---- حذف دسته‌جمعی با تأیید تایپی ----
+function confirmWord(title,msg){return new Promise(res=>{
+  const m=document.createElement('div');m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:70;display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto';
+  m.innerHTML=`<div class="card" style="max-width:460px;width:100%;margin:0"><h3 style="margin-top:0;color:#c0392b">⚠ ${title}</h3><p style="line-height:2">${msg}</p><label>برای تأیید، کلمه <b>حذف</b> را در کادر زیر تایپ کنید:</label><input id="cw_in" autocomplete="off"><div class="row" style="margin-top:12px"><button class="btn" id="cw_ok" disabled style="background:#c0392b">حذف نهایی</button><button class="btn sec" id="cw_no">انصراف</button></div></div>`;
+  document.body.append(m);const inp=m.querySelector('#cw_in'),ok=m.querySelector('#cw_ok');
+  inp.oninput=()=>{ok.disabled=inp.value.replace(/[\u200c\s]/g,'')!=='حذف'};
+  const done=v=>{m.remove();res(v)};ok.onclick=()=>done(true);m.querySelector('#cw_no').onclick=()=>done(false);inp.focus();
+})}
+async function deleteAll(kind,btn){
+  const st=kind==='student',sc=me.admin_school;
+  const yes=await confirmWord(st?'حذف اطلاعات همه دانش‌آموزان':'حذف تمام همکاران',
+    'همه '+(st?'دانش‌آموزان':'همکاران')+' مدرسه '+esc(schName(sc))+' (شامل حساب، اطلاعات، عکس، مدارک، درخواست‌ها و افراد واردشده از اکسل) برای همیشه حذف می‌شوند و بازگشتی ندارد.'+(st?'':' همکاری که عضو مدرسه دیگر هم باشد، فقط از فهرست همین مدرسه حذف می‌شود.'));
+  if(!yes)return;
+  const old=btn.textContent;btn.disabled=true;
+  try{
+    let ids;
+    if(st)ids=students.map(x=>x.id);
+    else{const r=await sb.rpc('teachers_only_here',{p_school:sc});if(r.error)throw r.error;ids=r.data||[]}
+    for(let i=0;i<ids.length;i+=5){
+      btn.textContent='در حال پاک‌کردن فایل‌ها… '+Math.min(i+5,ids.length)+' از '+ids.length;
+      await Promise.all(ids.slice(i,i+5).map(id=>Promise.all([wipeFolder('staff-docs',id),st?null:wipeFolder('chat-files',id)])));
+    }
+    btn.textContent='در حال حذف از دیتابیس…';
+    const r=await sb.rpc(st?'delete_all_students':'delete_all_teachers',{p_school:sc});
+    if(r.error)throw r.error;
+    alert('حذف انجام شد ('+(r.data||0)+' مورد).');
+  }catch(e){alert('حذف انجام نشد: '+(e.message||e)+' (آیا schema_v14.sql اجرا شده است؟)')}
+  btn.textContent=old;btn.disabled=false;open=null;sopen=null;
+  await loadList();renderAdmin();renderStudents();
+}
+$('#delall_t').onclick=e=>deleteAll('teacher',e.currentTarget);
+$('#delall_s').onclick=e=>deleteAll('student',e.currentTarget);
+
 // ---- مدارک ----
 const CATS={birth_certificate:'شناسنامه (همه صفحات)',national_card:'کارت ملی',appreciation:'تقدیرنامه',decree:'حکم / ابلاغ',inservice:'لیست دوره‌های ضمن خدمت',plan_daily:'طرح درس روزانه',plan_annual:'طرح درس سالانه',other:'سایر مدارک'};
 $('#dcat').innerHTML=Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
@@ -922,143 +1064,22 @@ async function loadAdminDocs(id){
 }
 
 // ---- چاپ فرم مشخصات (از پنجره چاپ مرورگر گزینه «Save as PDF» را انتخاب کنید) ----
-function formRows(p){
+async function printForm(p,sch){
+  if(!p)return;
   const ex=p.teacher_extra||{};
   const rows=[['نام',p.first_name],['نام خانوادگی',p.last_name],['کد ملی',p.national_id],['کد پرسنلی',p.personnel_code],['تلفن همراه',p.mobile],['تلفن ثابت',p.home_phone],['تلفن اضطراری',p.emergency_phone],['مدرک تحصیلی',p.degree],['رشته تحصیلی',p.field_of_study],['رشته تدریس',p.teaching_field],['سمت',p.position],['وضعیت همکاری',p.emp_status],['سابقه خدمت (سال)',p.service_years],['ساعت تدریس در هفته',p.weekly_hours],['ساعت موظف',p.mandatory_hours],['ساعت غیرموظف',p.extra_hours],['پایه‌های تدریس',fv(p.grades)],['روزهای همکاری',fv(p.work_days)],['نام همسر',p.spouse_name],['شغل همسر',p.spouse_job],['تلفن همسر',p.spouse_phone],['تعداد فرزند',p.children],['آدرس',p.address],
     ...TSTATIC.map(([k,l])=>[l,ex[k]]),...TSEC.flatMap(x=>x[1]).map(([k,l])=>[l,fv(ex[k])]).filter(r=>r[1])];
-  return rows;
-}
-async function printForm(p,sch){
-  if(!p)return;
-  const rows=formRows(p);
   const w=window.open('','_blank');if(!w){alert('اجازه باز شدن پنجره جدید را به سایت بدهید.');return}
-  const pu=p.photo_path?await docUrl(p.photo_path):'';
-  w.document.write(`<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فرم مشخصات - ${esc(p.full_name)}</title><link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet"><style>@page{size:A4;margin:0}body{margin:0;padding:12mm 14mm;font-family:Vazirmatn,Tahoma,sans-serif;color:#000;line-height:1.7}.hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.sp{width:30mm;height:40mm;flex:none}.tt{flex:1;text-align:center}h1{font-size:20px;margin:0}h2{font-size:15px;margin:2px 0}.d{font-size:12px}img{width:30mm;height:40mm;object-fit:cover;border:1px solid #444}table{width:100%;border-collapse:collapse}td{border:1px solid #444;padding:6px 10px;font-size:13px;vertical-align:top}td:first-child{width:30%;background:#eee;font-weight:600}.sig{display:flex;justify-content:space-between;margin-top:40px;font-size:13px}</style></head><body><div class="hd"><div class="sp"></div><div class="tt"><h1>فرم مشخصات همکار</h1>${sch?`<h2>مدرسه ${esc(fa(schName(sch)))}</h2>`:''}<div class="d">تاریخ چاپ: ${new Date().toLocaleDateString('fa-IR')}</div></div><div class="sp">${pu?`<img src="${pu}" alt="">`:''}</div></div><table>${rows.map(([k,v])=>`<tr><td>${k}</td><td>${esc(fa(String(v??'')))}</td></tr>`).join('')}</table><div class="sig"><span>امضای همکار</span><span>امضای مدیر</span></div></body></html>`);
-  w.document.close();setTimeout(()=>{w.focus();w.print()},1800);
+  let pu='';
+  if(p.photo_path){try{const r=await sb.storage.from('staff-docs').download(p.photo_path);if(!r.error&&r.data)pu=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=()=>res('');fr.readAsDataURL(r.data)})}catch(e){}
+    if(!pu)alert('عکس پرسنلی بارگذاری نشد؛ فرم بدون عکس چاپ می‌شود.')}
+  w.document.write(`<!DOCTYPE html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>فرم مشخصات - ${esc(p.full_name)}</title><link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&display=swap" rel="stylesheet"><style>@page{size:A4;margin:0}body{margin:0;padding:10mm 12mm;font-family:Vazirmatn,Tahoma,sans-serif;color:#000;line-height:1.5}.hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}.sp{width:30mm;height:40mm;flex:none}.tt{flex:1;text-align:center}h1{font-size:20px;margin:0}h2{font-size:15px;margin:2px 0}.d{font-size:12px}img{width:30mm;height:40mm;object-fit:cover;border:1px solid #444}table{width:100%;border-collapse:collapse;table-layout:fixed}td{border:1px solid #444;padding:3px 6px;font-size:11px;line-height:1.5;vertical-align:top;word-break:break-word}td.k{background:#eee;font-weight:600}.sig{display:flex;justify-content:space-between;margin-top:22px;font-size:12px}</style></head><body><div class="hd"><div class="sp"></div><div class="tt"><h1>فرم مشخصات همکار</h1>${sch?`<h2>مدرسه ${esc(fa(schName(sch)))}</h2>`:''}<div class="d">تاریخ چاپ: ${new Date().toLocaleDateString('fa-IR')}</div></div><div class="sp">${pu?`<img src="${pu}" alt="">`:''}</div></div><table><colgroup><col style="width:15%"><col style="width:35%"><col style="width:15%"><col style="width:35%"></colgroup>${compactRowsHtml(rows)}</table><div class="sig"><span>امضای همکار</span><span>امضای مدیر</span></div></body></html>`);
+  w.document.close();
+  const im=w.document.querySelector('img');if(im&&!im.complete)await new Promise(r=>{im.onload=im.onerror=r});
+  try{await w.document.fonts.ready}catch(e){}
+  {const H=w.document.body.scrollHeight,maxH=1122;if(H>maxH)w.document.body.style.zoom=(maxH/H*0.98).toFixed(3)}
+  setTimeout(()=>{w.focus();w.print()},600);
 }
-
-// ---- دانلود پوشه‌ی کامل یک دبیر: مدارک + عکس + PDF فرم مشخصات (با عکس در بالا) ----
-const loadLibJs=(src,ok)=>new Promise((res,rej)=>{if(ok())return res();const t=document.createElement('script');t.src=src;t.onload=res;t.onerror=()=>rej(new Error('load '+src));document.head.append(t)});
-// برش صفحه‌ها در مرز ردیف‌های جدول تا متن وسط ردیف نبرد
-function pageCuts(edges,H,sliceH){
-  const out=[];let pos=0;
-  while(pos<H){
-    let end;
-    if(pos+sliceH>=H)end=H;
-    else{const c=edges.filter(x=>x>pos+sliceH*0.3&&x<=pos+sliceH);end=c.length?Math.max(...c):pos+sliceH}
-    out.push([pos,end]);pos=end;
-  }
-  return out;
-}
-async function formPdfBlob(p,sch,photoBlob){
-  await loadLibJs('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',()=>window.html2canvas);
-  await loadLibJs('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',()=>window.jspdf);
-  const rows=formRows(p);
-  const purl=photoBlob?URL.createObjectURL(photoBlob):'';
-  const host=document.createElement('div');
-  host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#000;direction:rtl;font-family:Vazirmatn,Tahoma,sans-serif;line-height:1.7;padding:46px 53px;box-sizing:border-box';
-  host.innerHTML=`<style>.pf-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}.pf-sp{width:113px;height:151px;flex:none}.pf-tt{flex:1;text-align:center}.pf-tt h1{font-size:22px;margin:0}.pf-tt h2{font-size:16px;margin:2px 0}.pf-d{font-size:12px}.pf-sp img{width:113px;height:151px;object-fit:cover;border:1px solid #444;display:block}.pf-t{width:100%;border-collapse:collapse}.pf-t td{border:1px solid #444;padding:6px 10px;font-size:13px;vertical-align:top;color:#000}.pf-t td:first-child{width:30%;background:#eee;font-weight:600}.pf-sig{display:flex;justify-content:space-between;margin-top:40px;font-size:13px}</style><div class="pf-hd"><div class="pf-sp"></div><div class="pf-tt"><h1>فرم مشخصات همکار</h1>${sch?`<h2>مدرسه ${esc(fa(schName(sch)))}</h2>`:''}<div class="pf-d">تاریخ: ${new Date().toLocaleDateString('fa-IR')}</div></div><div class="pf-sp">${purl?`<img src="${purl}" alt="">`:''}</div></div><table class="pf-t">${rows.map(([k,v])=>`<tr><td>${k}</td><td>${esc(fa(String(v??'')))}</td></tr>`).join('')}</table><div class="pf-sig"><span>امضای همکار</span><span>امضای مدیر</span></div>`;
-  document.body.append(host);
-  try{
-    if(document.fonts&&document.fonts.ready)await document.fonts.ready;
-    const img=host.querySelector('img');if(img&&!img.complete)await new Promise(r=>{img.onload=img.onerror=r});
-    const sc=2,cv=await html2canvas(host,{scale:sc,backgroundColor:'#fff',useCORS:true});
-    const top=host.getBoundingClientRect().top;
-    const edges=[...host.querySelectorAll('tr')].map(tr=>Math.round((tr.getBoundingClientRect().bottom-top)*sc));
-    const sliceH=Math.floor(cv.width*277/210);
-    const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4',orientation:'p'});
-    pageCuts(edges,cv.height,sliceH).forEach(([a,b],k)=>{
-      const c2=document.createElement('canvas');c2.width=cv.width;c2.height=b-a;
-      const g=c2.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c2.width,c2.height);g.drawImage(cv,0,a,cv.width,b-a,0,0,cv.width,b-a);
-      if(k)pdf.addPage();
-      pdf.addImage(c2.toDataURL('image/jpeg',0.92),'JPEG',0,10,210,(b-a)*210/cv.width);
-    });
-    return pdf.output('blob');
-  }finally{host.remove();if(purl)URL.revokeObjectURL(purl)}
-}
-const safeName=v=>String(v||'').replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,' ').trim();
-const teacherFolderName=p=>safeName(`${p.first_name||''} ${p.last_name||''}`)||safeName(p.full_name)||p.personnel_code||'دبیر';
-const extOf=s=>((String(s||'').split('.').pop()||'').toLowerCase().replace(/[^a-z0-9]/g,''))||'bin';
-// مقصد ذخیره: پوشه‌ی انتخاب‌شده‌ی کاربر (یا zip اگر مرورگر پشتیبانی نکند)
-async function makeSink(dir){
-  if(dir)return{
-    mk:async n=>{const sub=await dir.getDirectoryHandle(n,{create:true});return async(name,blob)=>{const fh=await sub.getFileHandle(name,{create:true});const w=await fh.createWritable();await w.write(blob);await w.close()}},
-    fin:async()=>false};
-  try{await loadLibJs('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',()=>window.JSZip)}
-  catch(e){throw new Error('بارگذاری ابزار فشرده‌سازی انجام نشد. اینترنت یا فیلترشکن را بررسی کنید.')}
-  const z=new JSZip();
-  return{
-    mk:async n=>{const f=z.folder(n);return async(name,blob)=>{f.file(name,blob)}},
-    fin:async zn=>{const blob=await z.generateAsync({type:'blob'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=safeName(zn)+'.zip';a.click();URL.revokeObjectURL(a.href);return true}};
-}
-// نوشتن فایل‌های یک دبیر: عکس + همه‌ی مدارک + PDF فرم مشخصات (با عکس در بالا)
-async function writeTeacherFiles(p,sch,put,prog){
-  const used={};
-  const uniq=n=>{if(!used[n]){used[n]=1;return n}used[n]++;const i=n.lastIndexOf('.');return i>0?`${n.slice(0,i)} (${used[n]})${n.slice(i)}`:`${n} (${used[n]})`};
-  let nDocs=0,failDocs=0,photoOk=false,pdfOk=false,photoBlob=null;
-  if(p.photo_path){
-    prog('عکس');
-    const {data}=await sb.storage.from('staff-docs').download(p.photo_path);
-    if(data){photoBlob=data;await put(uniq('عکس.'+extOf(p.photo_path)),data);photoOk=true}
-  }
-  const {data:docs,error:de}=await sb.from('documents').select('*').eq('user_id',p.id).order('created_at');
-  if(de)throw de;
-  for(const d of (docs||[])){
-    prog(`مدارک ${nDocs+failDocs+1} از ${docs.length}`);
-    try{
-      const {data,error}=await sb.storage.from('staff-docs').download(d.file_path);
-      if(error||!data)throw error||new Error('empty');
-      const fn=safeName(d.file_name)||('file.'+extOf(d.file_path));
-      await put(uniq(`${safeName(CATS[d.category]||d.category)} - ${fn}`),data);nDocs++;
-    }catch(e){failDocs++}
-  }
-  prog('ساخت PDF فرم');
-  try{const pdf=await formPdfBlob(p,sch,photoBlob);await put(uniq(`فرم مشخصات - ${teacherFolderName(p)}.pdf`),pdf);pdfOk=true}
-  catch(e){console.error(e)}
-  return{nDocs,failDocs,photoOk,pdfOk};
-}
-// یک دبیر (از جزئیات همان دبیر)
-async function downloadTeacherFolder(p,sch,btn){
-  if(!p)return;
-  let dir=null; // اول از همه، قبل از هر await
-  if(window.showDirectoryPicker){try{dir=await showDirectoryPicker({mode:'readwrite'})}catch(e){if(e.name==='AbortError')return}}
-  const old=btn.textContent;btn.disabled=true;btn.textContent='در حال آماده‌سازی…';
-  try{
-    const folder=teacherFolderName(p),sink=await makeSink(dir),put=await sink.mk(folder);
-    const r=await writeTeacherFiles(p,sch,put,t=>{btn.textContent=t+'…'});
-    const z=await sink.fin(folder);
-    alert(`پوشه‌ی «${folder}» ${z?'به‌صورت فایل فشرده دانلود':'ذخیره'} شد:\n• ${r.nDocs} مدرک`+(r.failDocs?` (${r.failDocs} مدرک دریافت نشد)`:'')+`\n• عکس: ${r.photoOk?'بله':'ثبت نشده یا دریافت نشد'}\n• PDF فرم مشخصات: ${r.pdfOk?'بله':'ساخته نشد (اینترنت یا فیلترشکن را بررسی کنید)'}`);
-  }catch(e){alert('ذخیره‌ی پوشه انجام نشد: '+(e&&e.message||e))}
-  finally{btn.textContent=old;btn.disabled=false}
-}
-// همه‌ی دبیران: برای هر دبیر یک پوشه به نام خودش
-async function downloadAllFolders(people,sch,btn){
-  const L=(people||[]).filter(x=>x&&x.id);
-  if(!L.length){alert('دبیری در فهرست نیست.');return}
-  if(!confirm(`برای ${L.length} دبیر، هرکدام یک پوشه (مدارک + عکس + PDF فرم) ذخیره می‌شود. ممکن است چند دقیقه طول بکشد. ادامه می‌دهید؟`))return;
-  let dir=null; // اول از همه، قبل از هر await
-  if(window.showDirectoryPicker){try{dir=await showDirectoryPicker({mode:'readwrite'})}catch(e){if(e.name==='AbortError')return}}
-  const old=btn.textContent;btn.disabled=true;btn.textContent='در حال آماده‌سازی…';
-  try{
-    const sink=await makeSink(dir),usedF={};
-    let docs=0,photos=0,pdfs=0,failT=0,i=0;
-    for(const p of L){
-      i++;
-      let name=teacherFolderName(p);
-      if(usedF[name])name+=' - '+(p.personnel_code||p.national_id||usedF[name]+1);
-      usedF[teacherFolderName(p)]=(usedF[teacherFolderName(p)]||0)+1;
-      try{
-        const put=await sink.mk(name);
-        const r=await writeTeacherFiles(p,sch,put,t=>{btn.textContent=`دبیر ${i} از ${L.length}: ${t}`});
-        docs+=r.nDocs;if(r.photoOk)photos++;if(r.pdfOk)pdfs++;
-      }catch(e){failT++;console.error(e)}
-    }
-    const z=await sink.fin('مدارک-دبیران');
-    alert(`${z?'فایل فشرده دانلود':'ذخیره'} شد.\n• دبیران: ${L.length-failT} از ${L.length}\n• مدارک: ${docs}\n• عکس: ${photos}\n• PDF فرم: ${pdfs}`+(failT?`\n• ${failT} دبیر ذخیره نشد.`:''));
-  }catch(e){alert('ذخیره انجام نشد: '+(e&&e.message||e))}
-  finally{btn.textContent=old;btn.disabled=false}
-}
-$('#expall').onclick=e=>downloadAllFolders(list,me&&me.admin_school,e.currentTarget);
 $('#prt').onclick=()=>{if(!me||!me.full_name||!me.national_id){alert('ابتدا اطلاعات فرم را ثبت کنید.');return}const sc=isAdm()?me.admin_school:(coopSel||(mems[0]||{}).school);printForm({...me,...(isAdm()?{}:coopDetails(sc))},sc)};
 
 // ---- پنل مدیر ----
@@ -1100,7 +1121,7 @@ function renderAdmin(){
   let L=list.filter(s=>!q||[s.full_name,s.national_id,s.personnel_code,s.teaching_field].some(v=>String(v||'').includes(q)));
   if(onlyPending)L=L.filter(s=>s.mstatus!=='approved');
   $('#empty').classList.toggle('hide',list.length>0||impRows.some(r=>r.kind==='teacher'));$('#fl').textContent=onlyPending?'نمایش همه':'فقط در انتظار تأیید';
-  $('#tb').innerHTML=L.map((s,i)=>`<tr><td>${i+1}</td><td>${thumbHtml(s)}</td><td><a href="#" data-d="${esc(s.id)}">${esc(s.first_name||s.full_name||s.email)}</a></td><td>${esc(s.last_name)}</td><td dir="ltr">${esc(s.personnel_code)}</td><td dir="ltr">${esc(s.national_id)}</td><td dir="ltr">${esc(s.mobile)}</td><td>${esc(s.weekly_hours)}</td><td><span class="tag ${s.mstatus==='approved'?'ok':'wn'}">${s.mstatus==='approved'?'تأییدشده':'در انتظار'}</span></td><td><button class="btn sm ${s.mstatus==='approved'?'sec':''}" data-a="${esc(s.id)}">${s.mstatus==='approved'?'لغو تأیید':'تأیید'}</button></td></tr>`+(open===s.id?`<tr><td colspan="10" class="det"><img id="tph" class="hide" alt="" style="max-width:110px;border-radius:6px"><br>ایمیل: ${esc(s.email)} | کد ملی: ${esc(s.national_id)} | مدرک: ${esc(s.degree)} ${esc(s.field_of_study)}<br>سمت: ${esc(s.position)} | وضعیت همکاری: ${esc(s.emp_status)} | ساعت تدریس: ${esc(s.weekly_hours)} | موظف: ${esc(s.mandatory_hours)} | غیرموظف: ${esc(s.extra_hours)} | سابقه: ${esc(s.service_years)} سال | پایه‌ها: ${esc((s.grades||[]).join('، '))} | روزها: ${esc((s.work_days||[]).join('، '))}<br>همسر: ${esc(s.spouse_name)} ${esc(s.spouse_job)} ${esc(s.spouse_phone)} | فرزند: ${esc(s.children)}<br>همراه: ${esc(s.mobile)} | ثابت: ${esc(s.home_phone)} | اضطراری: ${esc(s.emergency_phone)}<br>آدرس: ${esc(s.address)}${extraHtmlT(s)}<hr><b>رمز عبور:</b> ${s.must_change?(s.pw_is_code?('هنوز تغییر نداده؛ رمز فعلی همان کد پرسنلی است ('+esc(s.personnel_code)+')'):'رمز موقت توسط مدیر تعیین شده و هنوز تغییر نکرده است'):'توسط خود کاربر تغییر کرده و قابل مشاهده نیست'}<div class="row" style="margin-top:6px"><input id="npw" placeholder="رمز جدید (حداقل ۸ نویسه)" class="ltr" style="max-width:220px"><button class="btn sm" data-sp="${esc(s.id)}">تنظیم رمز</button><button class="btn sec sm" data-rp="${esc(s.id)}">بازنشانی به کد پرسنلی</button></div><hr><b>مدارک:</b> <span id="dl-${esc(s.id)}">…</span><div style="margin-top:8px"><button class="btn sm" data-dl="${esc(s.id)}">⬇ دانلود پوشه‌ی مدارک</button> <button class="btn sec sm" data-p="${esc(s.id)}">🖨 چاپ فرم مشخصات</button> <button class="btn sec sm" data-del="${esc(s.id)}" style="color:#c0392b">🗑 حذف از فهرست</button></div></td></tr>`:'')).join('');
+  $('#tb').innerHTML=L.map((s,i)=>`<tr><td>${i+1}</td><td>${thumbHtml(s)}</td><td><a href="#" data-d="${esc(s.id)}">${esc(s.first_name||s.full_name||s.email)}</a></td><td>${esc(s.last_name)}</td><td dir="ltr">${esc(s.personnel_code)}</td><td dir="ltr">${esc(s.national_id)}</td><td dir="ltr">${esc(s.mobile)}</td><td>${esc(s.weekly_hours)}</td><td><span class="tag ${s.mstatus==='approved'?'ok':'wn'}">${s.mstatus==='approved'?'تأییدشده':'در انتظار'}</span></td><td><button class="btn sm ${s.mstatus==='approved'?'sec':''}" data-a="${esc(s.id)}">${s.mstatus==='approved'?'لغو تأیید':'تأیید'}</button> <button class="btn sec sm" data-dl="${esc(s.id)}" title="دانلود پوشه کامل (مدارک، عکس و PDF فرم)">⬇ پوشه</button></td></tr>`+(open===s.id?`<tr><td colspan="10" class="det"><img id="tph" class="hide" alt="" style="max-width:110px;border-radius:6px"><br>ایمیل: ${esc(s.email)} | کد ملی: ${esc(s.national_id)} | مدرک: ${esc(s.degree)} ${esc(s.field_of_study)}<br>سمت: ${esc(s.position)} | وضعیت همکاری: ${esc(s.emp_status)} | ساعت تدریس: ${esc(s.weekly_hours)} | موظف: ${esc(s.mandatory_hours)} | غیرموظف: ${esc(s.extra_hours)} | سابقه: ${esc(s.service_years)} سال | پایه‌ها: ${esc((s.grades||[]).join('، '))} | روزها: ${esc((s.work_days||[]).join('، '))}<br>همسر: ${esc(s.spouse_name)} ${esc(s.spouse_job)} ${esc(s.spouse_phone)} | فرزند: ${esc(s.children)}<br>همراه: ${esc(s.mobile)} | ثابت: ${esc(s.home_phone)} | اضطراری: ${esc(s.emergency_phone)}<br>آدرس: ${esc(s.address)}${extraHtmlT(s)}<hr><b>رمز عبور:</b> ${s.must_change?(s.pw_is_code?('هنوز تغییر نداده؛ رمز فعلی همان کد پرسنلی است ('+esc(s.personnel_code)+')'):'رمز موقت توسط مدیر تعیین شده و هنوز تغییر نکرده است'):'توسط خود کاربر تغییر کرده و قابل مشاهده نیست'}<div class="row" style="margin-top:6px"><input id="npw" placeholder="رمز جدید (حداقل ۸ نویسه)" class="ltr" style="max-width:220px"><button class="btn sm" data-sp="${esc(s.id)}">تنظیم رمز</button><button class="btn sec sm" data-rp="${esc(s.id)}">بازنشانی به کد پرسنلی</button></div><hr><b>مدارک:</b> <span id="dl-${esc(s.id)}">…</span><div style="margin-top:8px"><button class="btn sec sm" data-p="${esc(s.id)}">🖨 چاپ فرم مشخصات</button> <button class="btn sec sm" data-dl="${esc(s.id)}">⬇ دانلود پوشه کامل</button> <button class="btn sec sm" data-del="${esc(s.id)}" style="color:#c0392b">🗑 حذف از فهرست</button></div></td></tr>`:'')).join('');
   if(!onlyPending){$('#tb').insertAdjacentHTML('beforeend',impRowsHtml('teacher',L.length,q));bindImpDel($('#tb'))}
   $('#tb').querySelectorAll('[data-a]').forEach(b=>b.onclick=async()=>{const s=list.find(x=>x.id===b.dataset.a);
     const {error}=await sb.rpc('set_membership',{p_user:s.id,p_school:me.admin_school,p_status:s.mstatus==='approved'?'pending':'approved'});if(error)alert(error.message);else{await loadList();renderAdmin()}});
@@ -1111,7 +1132,7 @@ function renderAdmin(){
   $('#tb').querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{const v=dig($('#npw').value);if(v.length<8){alert('رمز باید حداقل ۸ نویسه باشد.');return}setPw(b.dataset.sp,v)});
   $('#tb').querySelectorAll('[data-rp]').forEach(b=>b.onclick=()=>{const t=list.find(x=>x.id===b.dataset.rp);if(!t||!t.personnel_code){alert('کد پرسنلی ثبت نشده است.');return}if(confirm('رمز به کد پرسنلی بازنشانی شود؟'))setPw(t.id,t.personnel_code)});
   $('#tb').querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>printForm(list.find(x=>x.id===b.dataset.p),me.admin_school));
-  $('#tb').querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>downloadTeacherFolder(list.find(x=>x.id===b.dataset.dl),me.admin_school,b));
+  $('#tb').querySelectorAll('[data-dl]').forEach(b=>b.onclick=()=>{const t=list.find(x=>x.id===b.dataset.dl);if(t)exportTeacherFolders([t],b,me.admin_school,'پوشه-'+(t.full_name||'دبیر'))});
   $('#tb').querySelectorAll('[data-del]').forEach(b=>b.onclick=async()=>{
     const t=list.find(x=>x.id===b.dataset.del);if(!t)return;
     if(!confirm('«'+t.full_name+'» از فهرست دبیران مدرسه '+schName(me.admin_school)+' حذف شود؟\nاگر در مدرسه دیگری عضو نباشد، حساب و فایل‌هایش برای همیشه پاک می‌شود.'))return;
