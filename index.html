@@ -17,8 +17,8 @@ body{margin:0;min-height:100vh;background:#0b1d3a linear-gradient(160deg,#091731
 header{padding:14px 16px;background:var(--card);border-bottom:1px solid var(--br);display:flex;justify-content:space-between;align-items:center;gap:8px}
 h1{font-size:18px;margin:0}
 nav{display:flex;gap:6px;padding:10px 16px;overflow-x:auto}
-nav button{background:var(--card);border:1px solid var(--br);color:var(--tx);padding:8px 16px;border-radius:20px;font:inherit;cursor:pointer;white-space:nowrap}
-nav button.on{background:var(--pr);color:var(--prt);border-color:var(--pr)}
+nav button{background:var(--pr);border:1px solid var(--pr);color:var(--prt);padding:8px 16px;border-radius:20px;font:inherit;cursor:pointer;white-space:nowrap}
+nav button.on{background:var(--ac,#d9822b);color:var(--act,#111111);border-color:var(--ac,#d9822b)}
 main{max-width:860px;margin:0 auto;padding:0 16px 32px}
 .card{background:var(--card);border:1px solid var(--br);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 8px 28px rgba(0,0,0,.28)}
 .banner{padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:14px;border:1px solid var(--br);background:var(--card)}
@@ -32,7 +32,7 @@ h3{margin:18px 0 8px;font-size:15px}
 .chips label{display:flex;align-items:center;gap:5px;color:var(--tx);border:1px solid var(--br);padding:5px 10px;border-radius:16px;margin:0}
 .chips input{width:auto}
 .btn{background:var(--pr);color:var(--prt);border:0;padding:10px 20px;border-radius:8px;font:inherit;font-weight:600;cursor:pointer}
-.btn.sec{background:var(--ot);color:var(--tx)}.btn.sm{padding:4px 12px;font-size:13px}
+.btn.sec{background:var(--pr);color:var(--prt)}.btn.sm{padding:4px 12px;font-size:13px}
 .err{font-size:13px;margin-top:6px;min-height:20px;color:#c0392b}
 #msgs{height:55vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
 .m{max-width:80%;padding:8px 12px;border-radius:12px;background:var(--ot);align-self:flex-start;word-break:break-word}
@@ -278,7 +278,7 @@ const fg=c=>{const n=parseInt(c.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;return(0
 function schColor(){try{const k=me?(me.role==='admin'?me.admin_school:me.role==='student'?me.school:chatSchool):null;return(k&&SCH[k]&&SCH[k].c)||''}catch(e){return ''}}
 function applyTheme(){const r=document.documentElement.style,t=THEME||{};
   const set=(v,c)=>c?r.setProperty(v,c):r.removeProperty(v);
-  const pr=schColor()||t.pr;set('--pr',pr);set('--prt',pr?fg(pr):'');set('--card',t.card);set('--bg',t.bg);set('--tx',t.tx);
+  const pr=schColor()||t.pr;set('--pr',pr);set('--prt',schColor()?fg(pr):(t.bt||(pr?fg(pr):'')));set('--ac',t.ac);set('--act',fg(t.ac||'#d9822b'));set('--card',t.card);set('--bg',t.bg);set('--tx',t.tx);
   document.body.style.background=(t.g1||t.g2)?`${t.g1||'#091731'} linear-gradient(160deg,${t.g1||'#091731'} 0%,${t.g2||'#12356b'} 100%) fixed`:'';
   $('#htitle').textContent='🏫 '+(t.title||'پورتال مدارس');document.title=t.title||'پورتال مدرسه'}
 async function loadTheme(){const {data}=await sb.from('app_settings').select('value').eq('key','theme').maybeSingle();THEME=(data&&data.value)||{};applyTheme()}
@@ -370,9 +370,10 @@ $('#pb').onclick=async()=>{const a=dig($('#np1').value),e=$('#perr');e.style.col
   $('#np1').value=$('#np2').value='';e.style.color='var(--ok)';e.textContent='رمز با موفقیت تغییر کرد.';render()};
 
 if(initErr){['li','rb','go_stu','go_tch'].forEach(i=>$('#'+i).disabled=true);aerr(initErr==='lib'?'کتابخانه Supabase بارگذاری نشد. اینترنت یا فیلترشکن را بررسی کنید.':'SUPABASE_URL درست وارد نشده است. باید شبیه https://xxxx.supabase.co باشد، بدون / آخر و بدون rest/v1.')}
-else{loadSchools().then(renderHome).catch(()=>{});loadTheme().catch(()=>{});sb.auth.onAuthStateChange((ev,s)=>{if(ev==='TOKEN_REFRESHED')return;if(ev==='PASSWORD_RECOVERY')tab='acct';setTimeout(()=>onSession(s),0)})}
+else{loadSchools().then(renderHome).catch(()=>{});loadTheme().catch(()=>{});sb.auth.getSession().then(({data})=>{if(data&&data.session)$('#out').classList.remove('hide')}).catch(()=>{});sb.auth.onAuthStateChange((ev,s)=>{if(ev==='TOKEN_REFRESHED')return;if(ev==='PASSWORD_RECOVERY')tab='acct';setTimeout(()=>onSession(s),0)})}
 
 async function onSession(s){
+  if(s)$('#out').classList.remove('hide');
   try{await loadSchools();renderHome()}catch(e){}
   if(chan){sb.removeChannel(chan);chan=null}
   if(!s){me=null;applyTheme();msgs=[];list=[];mems=[];lastUid=null;filled=false;aview('a_home');$('#auth').classList.remove('hide');$('#app').classList.add('hide');$('#out').classList.add('hide');$('#who').classList.add('hide');return}
@@ -813,9 +814,9 @@ async function renderCreator(){
   await loadSchools();
   const ad=await sb.from('profiles').select('id,admin_school,username,full_name').eq('role','admin');const admins=ad.data||[];
   $('#cr_stats').innerHTML='<b>مدارس تعریف‌شده</b> – هر مدرسه پس از «فعال کردن» در صفحه اول نمایش داده می‌شود و ثبت‌نام و ورود مدیرش ممکن می‌شود.';
-  const T=THEME||{},D={pr:'#2457c5',card:'#d3dcea',bg:'#eef2f8',tx:'#1b2433',g1:'#091731',g2:'#12356b'};
+  const T=THEME||{},D={pr:'#2457c5',bt:'#ffffff',ac:'#d9822b',card:'#d3dcea',bg:'#eef2f8',tx:'#1b2433',g1:'#091731',g2:'#12356b'};
   const cl=(id,l)=>`<label style="display:flex;align-items:center;gap:6px">${l}<input type="color" id="th_${id}" value="${esc(T[id]||D[id])}"></label>`;
-  let h=`<div class="banner"><b>ظاهر برنامه</b><div class="row" style="margin-top:8px"><input id="th_title" value="${esc(T.title||'')}" placeholder="عنوان بالای صفحه (پیش‌فرض: پورتال مدارس)" style="max-width:320px"></div><div class="row" style="margin-top:8px">${cl('pr','رنگ اصلی و دکمه‌ها')}${cl('card','رنگ کارت‌ها و سربرگ')}${cl('bg','رنگ زمینه بخش‌های جزئی')}${cl('tx','رنگ متن')}${cl('g1','پس‌زمینه صفحه (بالا)')}${cl('g2','پس‌زمینه صفحه (پایین)')}</div><div class="row" style="margin-top:8px"><button class="btn sm" id="th_save">ذخیره ظاهر</button><button class="btn sec sm" id="th_reset">بازگشت به پیش‌فرض</button></div><div style="font-size:12px;margin-top:6px">تغییرها هنگام انتخاب رنگ پیش‌نمایش داده می‌شوند و با «ذخیره ظاهر» برای همه ثبت می‌شوند. پس‌زمینه صفحه را تیره انتخاب کنید تا نوشته‌های سفید خوانا بماند. رنگ هر مدرسه، رنگ اصلی را فقط برای اعضای همان مدرسه عوض می‌کند.</div></div>`;
+  let h=`<div class="banner"><b>ظاهر برنامه</b><div class="row" style="margin-top:8px"><input id="th_title" value="${esc(T.title||'')}" placeholder="عنوان بالای صفحه (پیش‌فرض: پورتال مدارس)" style="max-width:320px"></div><div class="row" style="margin-top:8px">${cl('pr','رنگ دکمه‌ها')}${cl('bt','رنگ نوشته روی دکمه‌ها')}${cl('ac','رنگ دکمه انتخاب‌شده (تب فعال)')}${cl('card','رنگ کارت‌ها و سربرگ')}${cl('bg','رنگ زمینه بخش‌های جزئی')}${cl('tx','رنگ نوشته‌های متن')}${cl('g1','پس‌زمینه صفحه (بالا)')}${cl('g2','پس‌زمینه صفحه (پایین)')}</div><div class="row" style="margin-top:8px"><button class="btn sm" id="th_save">ذخیره ظاهر</button><button class="btn sec sm" id="th_reset">بازگشت به پیش‌فرض</button></div><div style="font-size:12px;margin-top:6px">تغییرها هنگام انتخاب رنگ پیش‌نمایش داده می‌شوند و با «ذخیره ظاهر» برای همه ثبت می‌شوند. پس‌زمینه صفحه را تیره انتخاب کنید تا نوشته‌های سفید خوانا بماند. به‌طور پیش‌فرض همه دکمه‌ها یک رنگ‌اند و فقط تب انتخاب‌شده رنگ متفاوت دارد. رنگ هر مدرسه، رنگ دکمه‌ها را فقط برای اعضای همان مدرسه عوض می‌کند و نوشته روی آن‌ها خودکار خوانا می‌شود.</div></div>`;
   h+=`<div class="banner"><b>افزودن مدرسه جدید</b><div class="row" style="margin-top:8px"><input id="ns_n" placeholder="نام مدرسه" style="max-width:240px"><input id="ns_s" placeholder="شیفت (اختیاری، مثل شیفت صبح)" style="max-width:220px"><button class="btn sm" id="ns_add">افزودن (به‌صورت غیرفعال)</button></div></div>`;
   for(const k of Object.keys(SCH)){const s0=SCH[k];
     const a=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('role','student').eq('school',k);
@@ -823,7 +824,7 @@ async function renderCreator(){
     const c=await sb.from('memberships').select('user_id',{count:'exact',head:true}).eq('school',k).eq('status','pending');
     const ad1=admins.find(x=>x.admin_school===k);
     h+=`<div class="banner"><b>${esc(s0.n)}</b> <span class="tag ${s0.a?'ok':'wn'}">${s0.a?'فعال':'غیرفعال'}</span><br>دانش‌آموز ${a.count||0} | دبیر تأییدشده ${b.count||0} | دبیر در انتظار ${c.count||0}
-    <div class="row" style="margin-top:8px"><input id="en_${esc(k)}" value="${esc(s0.n)}" style="max-width:240px"><input id="es_${esc(k)}" value="${esc(s0.s)}" placeholder="شیفت" style="max-width:160px"><button class="btn sm" data-se="${esc(k)}">ذخیره نام و شیفت</button><label style="display:flex;align-items:center;gap:6px">رنگ مدرسه<input type="color" id="ec_${esc(k)}" value="${esc(s0.c||T.pr||D.pr)}"></label><button class="btn sm" data-cc="${esc(k)}">ذخیره رنگ</button><button class="btn sec sm" data-cx="${esc(k)}">حذف رنگ</button><button class="btn sec sm" data-st="${esc(k)}">${s0.a?'غیرفعال کردن':'فعال کردن'}</button><button class="btn sec sm" data-sd="${esc(k)}" style="color:#c0392b">حذف مدرسه</button></div>`+
+    <div class="row" style="margin-top:8px"><input id="en_${esc(k)}" value="${esc(s0.n)}" style="max-width:240px"><input id="es_${esc(k)}" value="${esc(s0.s)}" placeholder="شیفت" style="max-width:160px"><button class="btn sm" data-se="${esc(k)}">ذخیره نام و شیفت</button><label style="display:flex;align-items:center;gap:6px">رنگ مدرسه<input type="color" id="ec_${esc(k)}" value="${esc(s0.c||T.pr||D.pr)}"></label><button class="btn sm" data-cc="${esc(k)}">ذخیره رنگ</button><button class="btn sec sm" data-cx="${esc(k)}">حذف رنگ</button><button class="btn sec sm" data-st="${esc(k)}">${s0.a?'غیرفعال کردن':'فعال کردن'}</button><button class="btn sec sm" data-sd="${esc(k)}">حذف مدرسه</button></div>`+
     (ad1?`<div style="margin-top:8px">مدیر: نام کاربری <span dir="ltr">${esc(ad1.username)}</span>${ad1.full_name?' | '+esc(ad1.full_name):''}</div>
     <div class="row" style="margin-top:8px"><input id="cun_${esc(k)}" class="ltr" placeholder="نام کاربری جدید" style="max-width:200px"><button class="btn sm" data-cu="${esc(k)}">تغییر نام کاربری</button></div>
     <div class="row" style="margin-top:8px"><input id="cpw_${esc(k)}" class="ltr" placeholder="رمز جدید (حداقل ۸ نویسه)" style="max-width:240px"><button class="btn sec sm" data-cs2="${esc(k)}">تعیین رمز مدیر</button></div>`
@@ -839,7 +840,7 @@ async function renderCreator(){
     const {error}=await sb.rpc('creator_save_school',{p_code:k,p_name:SCH[k].n,p_shift:SCH[k].s,p_active:on});if(error)return fail(error);renderCreator()});
   const touched=new Set(Object.keys(T).filter(x=>x!=='title'));
   const collect=()=>{const o={};touched.forEach(i=>{o[i]=$('#th_'+i).value});const t=$('#th_title').value.trim();if(t)o.title=t;return o};
-  ['pr','card','bg','tx','g1','g2'].forEach(i=>$('#th_'+i).oninput=()=>{touched.add(i);THEME=collect();applyTheme()});
+  ['pr','bt','ac','card','bg','tx','g1','g2'].forEach(i=>$('#th_'+i).oninput=()=>{touched.add(i);THEME=collect();applyTheme()});
   $('#th_title').oninput=()=>{THEME=collect();applyTheme()};
   $('#th_save').onclick=async()=>{const {error}=await sb.rpc('creator_save_theme',{p:collect()});if(error)return fail(error);alert('ظاهر برنامه ذخیره شد.')};
   $('#th_reset').onclick=async()=>{if(!confirm('رنگ‌ها و عنوان به حالت پیش‌فرض برگردد؟'))return;const {error}=await sb.rpc('creator_save_theme',{p:{}});if(error)return fail(error);THEME={};applyTheme();renderCreator()};
