@@ -793,7 +793,7 @@ async function renderCreator(){
     const c=await sb.from('memberships').select('user_id',{count:'exact',head:true}).eq('school',k).eq('status','pending');
     const ad1=admins.find(x=>x.admin_school===k);
     h+=`<div class="banner"><b>${esc(s0.n)}</b> <span class="tag ${s0.a?'ok':'wn'}">${s0.a?'فعال':'غیرفعال'}</span><br>دانش‌آموز ${a.count||0} | دبیر تأییدشده ${b.count||0} | دبیر در انتظار ${c.count||0}
-    <div class="row" style="margin-top:8px"><input id="en_${esc(k)}" value="${esc(s0.n)}" style="max-width:240px"><input id="es_${esc(k)}" value="${esc(s0.s)}" placeholder="شیفت" style="max-width:160px"><button class="btn sm" data-se="${esc(k)}">ذخیره نام و شیفت</button><button class="btn sec sm" data-st="${esc(k)}">${s0.a?'غیرفعال کردن':'فعال کردن'}</button></div>`+
+    <div class="row" style="margin-top:8px"><input id="en_${esc(k)}" value="${esc(s0.n)}" style="max-width:240px"><input id="es_${esc(k)}" value="${esc(s0.s)}" placeholder="شیفت" style="max-width:160px"><button class="btn sm" data-se="${esc(k)}">ذخیره نام و شیفت</button><button class="btn sec sm" data-st="${esc(k)}">${s0.a?'غیرفعال کردن':'فعال کردن'}</button><button class="btn sec sm" data-sd="${esc(k)}" style="color:#c0392b">حذف مدرسه</button></div>`+
     (ad1?`<div style="margin-top:8px">مدیر: نام کاربری <span dir="ltr">${esc(ad1.username)}</span>${ad1.full_name?' | '+esc(ad1.full_name):''}</div>
     <div class="row" style="margin-top:8px"><input id="cun_${esc(k)}" class="ltr" placeholder="نام کاربری جدید" style="max-width:200px"><button class="btn sm" data-cu="${esc(k)}">تغییر نام کاربری</button></div>
     <div class="row" style="margin-top:8px"><input id="cpw_${esc(k)}" class="ltr" placeholder="رمز جدید (حداقل ۸ نویسه)" style="max-width:240px"><button class="btn sec sm" data-cs2="${esc(k)}">تعیین رمز مدیر</button></div>`
@@ -807,6 +807,14 @@ async function renderCreator(){
   box.querySelectorAll('[data-st]').forEach(b=>b.onclick=async()=>{const k=b.dataset.st,on=!SCH[k].a;
     if(!confirm(on?'مدرسه فعال شود؟':'مدرسه غیرفعال شود؟ مدیر آن دیگر نمی‌تواند وارد شود و ثبت‌نام جدید بسته می‌شود.'))return;
     const {error}=await sb.rpc('creator_save_school',{p_code:k,p_name:SCH[k].n,p_shift:SCH[k].s,p_active:on});if(error)return fail(error);renderCreator()});
+  box.querySelectorAll('[data-sd]').forEach(b=>b.onclick=async()=>{const k=b.dataset.sd;
+    const t=prompt('هشدار: مدرسه، مدیر، دانش‌آموزان، دبیرانِ فقط‌عضو این مدرسه، چت و ثبت‌نام‌های آن برای همیشه پاک می‌شود و برگشت ندارد.\nبرای تأیید، نام مدرسه را دقیقاً بنویسید:\n'+SCH[k].n);
+    if(t===null)return;if(t.trim()!==SCH[k].n){alert('نام مطابقت نداشت؛ حذف انجام نشد.');return}
+    b.disabled=true;
+    try{const pr=await sb.from('profiles').select('id').or(`and(role.eq.student,school.eq.${k}),and(role.eq.admin,admin_school.eq.${k})`);
+      for(const x of (pr.data||[])){await wipeFolder('staff-docs',x.id);await wipeFolder('chat-files',x.id)}}catch(e){}
+    const {error}=await sb.rpc('creator_delete_school',{p_code:k});if(error){b.disabled=false;return fail(error)}
+    alert('مدرسه و اطلاعات آن حذف شد.');renderCreator()});
   box.querySelectorAll('[data-ca]').forEach(b=>b.onclick=async()=>{const k=b.dataset.ca,u=dig($('#cau_'+k).value),pw=dig($('#cap_'+k).value);
     if(!/^[A-Za-z0-9_.@-]{3,40}$/.test(u)){alert('نام کاربری باید ۳ تا ۴۰ نویسه و فقط شامل حروف انگلیسی، عدد و _ . - @ باشد.');return}
     if(pw.length<8){alert('رمز باید حداقل ۸ نویسه باشد.');return}
