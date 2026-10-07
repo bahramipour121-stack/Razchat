@@ -273,6 +273,7 @@ function validId(c){if(!/^\d{10}$/.test(c)||/^(\d)\1{9}$/.test(c))return false;l
 
 // ---- ورود و ثبت‌نام ----
 let SCH={},THEME={};
+const cuser=v=>dig(v).replace(/[\s\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g,'');
 const fg=c=>{const n=parseInt(c.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;return(0.299*r+0.587*g+0.114*b)>150?'#111111':'#ffffff'};
 function schColor(){try{const k=me?(me.role==='admin'?me.admin_school:me.role==='student'?me.school:chatSchool):null;return(k&&SCH[k]&&SCH[k].c)||''}catch(e){return ''}}
 function applyTheme(){const r=document.documentElement.style,t=THEME||{};
@@ -844,7 +845,7 @@ async function renderCreator(){
       for(const x of (pr.data||[])){await wipeFolder('staff-docs',x.id);await wipeFolder('chat-files',x.id)}}catch(e){}
     const {error}=await sb.rpc('creator_delete_school',{p_code:k});if(error){b.disabled=false;return fail(error)}
     alert('مدرسه و اطلاعات آن حذف شد.');renderCreator()});
-  box.querySelectorAll('[data-ca]').forEach(b=>b.onclick=async()=>{const k=b.dataset.ca,u=dig($('#cau_'+k).value),pw=dig($('#cap_'+k).value);
+  box.querySelectorAll('[data-ca]').forEach(b=>b.onclick=async()=>{const k=b.dataset.ca,u=cuser($('#cau_'+k).value),pw=dig($('#cap_'+k).value);
     if(!/^[A-Za-z0-9_.@-]{3,40}$/.test(u)){alert('نام کاربری باید ۳ تا ۴۰ نویسه و فقط شامل حروف انگلیسی، عدد و _ . - @ باشد.');return}
     if(pw.length<8){alert('رمز باید حداقل ۸ نویسه باشد.');return}
     b.disabled=true;const email=`${EMAIL_BASE}+adm-${k}@${EMAIL_DOMAIN}`;
@@ -854,7 +855,7 @@ async function renderCreator(){
     alert('مدیر مدرسه ساخته شد.');renderCreator()});
   const go=async(k,pw)=>{const {error}=await sb.rpc('creator_reset_admin',{p_school:k,p_password:pw});alert(error?'انجام نشد: '+error.message:'رمز مدیر تعیین شد.')};
   box.querySelectorAll('[data-cs2]').forEach(b=>b.onclick=()=>{const v=dig($('#cpw_'+b.dataset.cs2).value);if(v.length<8){alert('رمز باید حداقل ۸ نویسه باشد.');return}go(b.dataset.cs2,v)});
-  box.querySelectorAll('[data-cu]').forEach(b=>b.onclick=async()=>{const v=dig($('#cun_'+b.dataset.cu).value);
+  box.querySelectorAll('[data-cu]').forEach(b=>b.onclick=async()=>{const v=cuser($('#cun_'+b.dataset.cu).value);
     if(!/^[A-Za-z0-9_.@-]{3,40}$/.test(v)){alert('نام کاربری باید ۳ تا ۴۰ نویسه و فقط شامل حروف انگلیسی، عدد و _ . - @ باشد.');return}
     const {error}=await sb.rpc('creator_set_admin_username',{p_school:b.dataset.cu,p_username:v});
     if(error)return fail(error);alert('نام کاربری تغییر کرد.');renderCreator()});
