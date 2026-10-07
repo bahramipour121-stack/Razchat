@@ -447,6 +447,7 @@ async function loadMsgs(){const {data}=await sb.from('messages').select('*').eq(
 function subscribe(){
   chan=sb.channel('msgs')
    .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},p=>{if(p.new.school===chatSchool){msgs.push(p.new);renderChat()}})
+   .on('postgres_changes',{event:'UPDATE',schema:'public',table:'messages'},p=>{const i=msgs.findIndex(z=>z.id===p.new.id);if(i>=0){msgs[i]={...msgs[i],...p.new};renderChat()}})
    .on('postgres_changes',{event:'DELETE',schema:'public',table:'messages'},p=>{msgs=msgs.filter(m=>m.id!==p.old.id);renderChat()})
    .subscribe();
 }
@@ -461,7 +462,14 @@ function renderChat(){
     else if(m.kind==='file'){const a=document.createElement('a');a.textContent='📎 '+(m.file_name||'فایل');a.href='#';
       a.onclick=async e=>{e.preventDefault();const u=await fileUrl(m.file_path,true);if(u)window.open(u,'_blank')};d.append(a);
       if((m.file_type||'').startsWith('image/'))fileUrl(m.file_path).then(u=>{if(!u)return;const i=document.createElement('img');i.src=u;i.onload=()=>{if(near)box.scrollTop=box.scrollHeight};a.after(i)})}
-    else{const t=document.createElement('span');t.textContent=m.body;d.append(t)}
+    else{const t=document.createElement('span');t.textContent=m.body;d.append(t);
+      if(m.edited_at){const e=document.createElement('small');e.textContent=' (ویرایش‌شده)';e.style.opacity='.6';d.append(e)}}
+    if(m.user_id===me.id&&(m.kind||'text')==='text'){const ed=document.createElement('button');ed.className='x';ed.type='button';ed.title='ویرایش پیام';ed.textContent='✎';
+      ed.onclick=async()=>{const v=prompt('ویرایش پیام:',m.body);if(v===null)return;const nv=v.trim();if(!nv||nv===m.body)return;
+        if(nv.length>1000){alert('پیام نباید بیش از ۱۰۰۰ نویسه باشد.');return}
+        const {error}=await sb.rpc('edit_message',{p_id:m.id,p_body:nv});
+        if(error){alert('ویرایش انجام نشد: '+error.message);return}
+        m.body=nv;m.edited_at=new Date().toISOString();renderChat()};d.append(ed)}
     if(isAdm()||m.user_id===me.id){const x=document.createElement('button');x.className='x';x.type='button';x.title='حذف پیام';x.textContent='✕';
       x.onclick=async()=>{if(!confirm('این پیام حذف شود؟'))return;
         const r=await sb.from('messages').delete().eq('id',m.id).select('id');
