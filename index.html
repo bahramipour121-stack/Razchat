@@ -62,7 +62,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 </style>
 </head>
 <body>
-<header><h1 id="htitle">🏫 پورتال مدارس</h1><div class="row"><span id="who" class="tag hide"></span><button class="btn sec sm hide" id="out">خروج</button></div></header>
+<header><h1 id="htitle">🏫 پورتال مدارس</h1><div class="row"><span id="who" class="tag hide"></span><button class="btn sec sm" id="out">خروج</button></div></header>
 
 <main>
 <div id="pwwarn" class="banner wn hide"></div>
@@ -380,7 +380,7 @@ async function onSession(s){
   if(s)$('#out').classList.remove('hide');
   try{await loadSchools();renderHome()}catch(e){}
   if(chan){sb.removeChannel(chan);chan=null}
-  if(!s){me=null;applyTheme();msgs=[];list=[];mems=[];lastUid=null;filled=false;aview('a_home');$('#auth').classList.remove('hide');$('#app').classList.add('hide');$('#out').classList.add('hide');$('#who').classList.add('hide');return}
+  if(!s){me=null;applyTheme();msgs=[];list=[];mems=[];lastUid=null;filled=false;aview('a_home');$('#auth').classList.remove('hide');$('#app').classList.add('hide');$('#who').classList.add('hide');return}
   const {data,error:pe}=await sb.from('profiles').select('*').eq('id',s.user.id).single();
   me=data;filled=false;sfilled=false;
   mems=[];if(me&&me.role==='teacher'){const rm=await sb.from('memberships').select('*').eq('user_id',me.id);mems=rm.data||[]}
