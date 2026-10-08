@@ -363,7 +363,7 @@ $('#rb').onclick=async()=>{
   if(data==='exists'){e.textContent='برای این کد قبلاً درخواست ثبت شده است.';return}
   if(data!=='ok'){e.textContent='اطلاعات نامعتبر است.';return}
   e.style.color='var(--ok)';e.textContent='درخواست شما برای '+ctx.regs.map(schName).join(' و ')+' ثبت شد و برای مدیر ارسال می‌شود. پس از تأیید، با '+(st?'کد ملی':'کد پرسنلی')+' (به‌عنوان نام کاربری و رمز اولیه) وارد شوید.'};
-$('#out').onclick=async()=>{try{await sb.auth.signOut({scope:'local'})}catch(e){}try{Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k))}catch(e){}tab='form';await onSession(null)};
+$('#out').onclick=()=>{try{sb.auth.signOut({scope:'local'}).catch(()=>{})}catch(e){}try{Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k));sessionStorage.clear()}catch(e){}location.reload()};
 $('#pb').onclick=async()=>{const a=dig($('#np1').value),e=$('#perr');e.style.color='#c0392b';
   if(a.length<8){e.textContent='رمز باید حداقل ۸ نویسه باشد.';return}
   if(a!==dig($('#np2').value)){e.textContent='تکرار رمز مطابقت ندارد.';return}
