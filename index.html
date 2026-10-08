@@ -85,6 +85,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <div id="a_reg" class="hide">
 <h3 style="margin-top:0" id="ar_title"></h3>
 <div class="banner" id="ar_sch"></div>
+<div id="rf_wrap" class="hide" style="margin-bottom:8px"><label style="display:flex;align-items:center;gap:8px;color:var(--tx)"><input type="checkbox" id="rf" style="width:auto">دانش‌آموز اتباع خارجی هستم (ثبت‌نام با کد یکتا به‌جای کد ملی)</label></div>
 <label id="rcl"></label><input id="rc" class="ltr" inputmode="numeric" maxlength="10">
 <label style="margin-top:8px">نام</label><input id="rfn">
 <label style="margin-top:8px">نام خانوادگی</label><input id="rln">
@@ -220,7 +221,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <button class="btn" id="exall">⬇ دانلود پوشه کامل همه دبیران</button>
 <button class="btn sec" id="delall_t" style="color:#c0392b">🗑 حذف تمام همکاران</button>
 </div>
-<div class="tw"><table><thead><tr><th>ردیف</th><th>عکس</th><th>نام</th><th>نام خانوادگی</th><th>کد پرسنلی</th><th>کد ملی</th><th>تلفن همراه</th><th>ساعت همکاری در هفته</th><th>وضعیت</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+<div class="tw"><table><thead><tr><th>ردیف</th><th>عکس</th><th>نام</th><th>نام خانوادگی</th><th>کد پرسنلی</th><th>کد ملی / کد یکتا</th><th>تلفن همراه</th><th>ساعت همکاری در هفته</th><th>وضعیت</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
 <div id="empty" class="banner hide">هنوز ثبت‌نامی انجام نشده است.</div>
 </section>
 
@@ -231,7 +232,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <div id="imp_s_cnt" style="margin-top:6px;font-size:13px"></div><div id="imp_s_res" style="margin-top:6px;font-size:13px"></div></div>
 <div class="banner">تأیید درخواست‌های ثبت‌نام (همکار و دانش‌آموز) در تب «پنل دبیران» انجام می‌شود.</div>
 <div class="row" style="margin-bottom:10px"><input id="sq" placeholder="جستجو: نام یا کد ملی" style="flex:1;min-width:180px"><button class="btn sec" id="srf">بازخوانی</button><button class="btn" id="sex">خروجی اکسل (XLSX)</button><button class="btn sec" id="sexp">خروجی عکس‌ها</button><button class="btn sec" id="delall_s" style="color:#c0392b">🗑 حذف اطلاعات همه دانش‌آموزان</button></div>
-<div class="tw"><table><thead><tr><th>ردیف</th><th>عکس</th><th>کد ملی</th><th>نام</th><th>نام خانوادگی</th><th>نام پدر</th><th>تاریخ تولد</th><th>سریال شناسنامه</th><th>تلفن مادر</th><th>تلفن پدر</th><th>پرونده</th></tr></thead><tbody id="stb"></tbody></table></div>
+<div class="tw"><table><thead><tr><th>ردیف</th><th>عکس</th><th>کد ملی / کد یکتا</th><th>نام</th><th>نام خانوادگی</th><th>نام پدر</th><th>تاریخ تولد</th><th>سریال شناسنامه</th><th>تلفن مادر</th><th>تلفن پدر</th><th>پرونده</th></tr></thead><tbody id="stb"></tbody></table></div>
 </section>
 
 <section id="v-acct" class="card hide">
@@ -255,7 +256,7 @@ const SUPABASE_ANON_KEY='sb_publishable_zE1PiEm8pKIBSICnqXDwPA_T6xylF-3';
 const EMAIL_BASE='babakbahramipour', EMAIL_DOMAIN='gmail.com';
 // پیام‌ها و فایل‌های چت قدیمی‌تر از این تعداد روز خودکار پاک می‌شوند
 const CHAT_KEEP_DAYS=60;
-const authEmail=(c,k)=>`${EMAIL_BASE}+${k==='student'?'st':'sp'}${c}@${EMAIL_DOMAIN}`;
+const authEmail=(c,k)=>`${EMAIL_BASE}+${k==='student'?(c.length===10?'st':'sf'):'sp'}${c}@${EMAIL_DOMAIN}`;
 // ============================================================================
 let sb,initErr='';
 try{if(typeof supabase==='undefined')initErr='lib';else if(!/^https:\/\/[a-z0-9]+\.supabase\.co$/.test(SUPABASE_URL))initErr='url';else sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)}catch(e){initErr='url'}
@@ -321,14 +322,16 @@ function openLogin(scope){
   }else rg.classList.add('hide');
   aview('a_login');
 }
+function rfSync(){const st=ctx.scope==='student',fr=st&&$('#rf').checked;$('#rcl').textContent=st?(fr?'کد یکتای اتباع خارجی (۱۰ تا ۱۶ رقم)':'کد ملی (۱۰ رقم)'):'کد پرسنلی (۸ رقم)';$('#rc').maxLength=st?(fr?16:10):8}
 function openReg(schools){
   ctx.regs=schools;const st=ctx.scope==='student';
   $('#ar_title').textContent=st?'ثبت‌نام اولیه دانش‌آموز':'ثبت‌نام اولیه دبیر';
   $('#ar_sch').textContent='مدرسه: '+schools.map(schName).join(' و ');
-  $('#rcl').textContent=st?'کد ملی (۱۰ رقم)':'کد پرسنلی (۸ رقم)';$('#rc').maxLength=st?10:8;
+  $('#rf').checked=false;$('#rf_wrap').classList.toggle('hide',!st);rfSync();
   $('#rml').textContent=st?'تلفن همراه ولی (پدر یا مادر)':'تلفن همراه';
   ['rc','rfn','rln','rm'].forEach(i=>$('#'+i).value='');aview('a_reg');
 }
+$('#rf').onchange=rfSync;
 $('#go_stu').onclick=()=>openLogin('student');$('#go_tch').onclick=()=>openLogin('teacher');
 
 $('#al_back').onclick=()=>aview('a_home');$('#ar_back').onclick=()=>aview('a_login');
@@ -341,28 +344,28 @@ $('#li').onclick=async()=>{
     if(re){aerr('خطای دیتابیس: '+re.message+' — اگر پیام درباره «function» یا «schema cache» است، فایل schema_v9.sql را اجرا کنید و سپس دستور notify pgrst را بزنید.');return}
     if(!em){
       const st=ctx.scope==='student';
-      if(!cre&&(st||ctx.scope==='teacher')&&/^\d+$/.test(u)&&u===dig(p)&&(st?validId(u):/^\d{8}$/.test(u))){
+      if(!cre&&(st||ctx.scope==='teacher')&&/^\d+$/.test(u)&&u===dig(p)&&(st?(validId(u)||/^\d{10,16}$/.test(u)):/^\d{8}$/.test(u))){
         const mail=authEmail(u,st?'student':'teacher');
         const r=await sb.auth.signUp({email:mail,password:u});
         if(!r.error){if(!r.data.session)await sb.auth.signInWithPassword({email:mail,password:u});aerr('حساب شما ساخته شد؛ در حال ورود…',true);return}
         aerr('این کد در فهرست مدرسه نیست یا هنوز تأیید نشده است. ابتدا «ثبت‌نام اولیه» را انجام دهید.');return}
       aerr(cre?'حساب سازنده در دیتابیس پیدا نشد.':'نام کاربری در این بخش پیدا نشد، یا ثبت‌نام شما هنوز تأیید نشده است. (برای بار اول، نام کاربری و رمز هر دو همان کد هستند.)');return}
     let error=null;for(const pp of [...new Set([dig(p),p,fa(dig(p))])]){({error}=await sb.auth.signInWithPassword({email:em,password:pp}));if(!error)break}
-    aerr(error?(/Invalid login/i.test(error.message)?'نام کاربری پیدا شد اما رمز نادرست است.':'خطا: '+error.message):'')}
+    aerr(error?(/Invalid login/i.test(error.message)?'نام کاربری پیدا شد اما رمز نادرست است.'+(/^(student|teacher)$/.test(ctx.scope)?' اگر قبلاً رمز خود را تغییر داده‌اید، رمز جدید را وارد کنید؛ در غیر این صورت از مدیر مدرسه بخواهید رمز شما را به کد اولیه بازنشانی کند.':''):'خطا: '+error.message):'')}
   catch(e){aerr('اتصال به Supabase برقرار نشد. اینترنت یا فیلترشکن را بررسی کنید.')}};
 $('#pw').onkeydown=e=>{if(e.key==='Enter')$('#li').click()};
 $('#rb').onclick=async()=>{
-  const st=ctx.scope==='student',k=st?'student':'teacher',c=dig($('#rc').value),fn=$('#rfn').value.trim(),ln=$('#rln').value.trim(),m=dig($('#rm').value),e=$('#rerr');e.style.color='#c0392b';e.textContent='';
-  if(st?!validId(c):!/^\d{8}$/.test(c)){e.textContent=st?'کد ملی معتبر نیست.':'کد پرسنلی باید دقیقاً ۸ رقم باشد.';return}
+  const st=ctx.scope==='student',fr=st&&$('#rf').checked,k=st?'student':'teacher',c=dig($('#rc').value),fn=$('#rfn').value.trim(),ln=$('#rln').value.trim(),m=dig($('#rm').value),e=$('#rerr');e.style.color='#c0392b';e.textContent='';
+  if(st?(fr?!/^\d{10,16}$/.test(c):!validId(c)):!/^\d{8}$/.test(c)){e.textContent=st?(fr?'کد یکتا باید فقط عدد و ۱۰ تا ۱۶ رقم باشد.':'کد ملی معتبر نیست.'):'کد پرسنلی باید دقیقاً ۸ رقم باشد.';return}
   if(!fn||!ln||!m){e.textContent='نام، نام خانوادگی و تلفن همراه را وارد کنید.';return}
-  const {data,error}=await sb.rpc('register_person',{p_kind:k,p_code:c,p_first:fn,p_last:ln,p_mobile:m,p_schools:ctx.regs});
+  const {data,error}=await sb.rpc('register_person',{p_kind:k,p_code:c,p_first:fn,p_last:ln,p_mobile:m,p_schools:ctx.regs,p_foreign:fr});
   if(error){e.textContent='ثبت نشد: '+error.message;return}
   if(data==='imported'){e.textContent='اطلاعات شما قبلاً توسط مدرسه ثبت شده است. از بخش ورود، کد را هم به‌عنوان نام کاربری و هم رمز وارد کنید.';return}
   if(data==='active'){e.textContent='با این کد قبلاً ثبت‌نام کرده‌اید و حساب دارید. از بخش ورود، کد را به‌عنوان نام کاربری و رمز وارد کنید.';return}
   if(data==='pending'){e.textContent='درخواست شما قبلاً ثبت شده و در انتظار تأیید مدیر است.';return}
   if(data==='exists'){e.textContent='برای این کد قبلاً درخواست ثبت شده است.';return}
   if(data!=='ok'){e.textContent='اطلاعات نامعتبر است.';return}
-  e.style.color='var(--ok)';e.textContent='درخواست شما برای '+ctx.regs.map(schName).join(' و ')+' ثبت شد و برای مدیر ارسال می‌شود. پس از تأیید، با '+(st?'کد ملی':'کد پرسنلی')+' (به‌عنوان نام کاربری و رمز اولیه) وارد شوید.'};
+  e.style.color='var(--ok)';e.textContent='درخواست شما برای '+ctx.regs.map(schName).join(' و ')+' ثبت شد و برای مدیر ارسال می‌شود. پس از تأیید، با '+(st?(fr?'کد یکتا':'کد ملی'):'کد پرسنلی')+' (به‌عنوان نام کاربری و رمز اولیه) وارد شوید.'};
 $('#out').onclick=()=>{try{sb.auth.signOut({scope:'local'}).catch(()=>{})}catch(e){}try{Object.keys(localStorage).filter(k=>k.startsWith('sb-')).forEach(k=>localStorage.removeItem(k));sessionStorage.clear()}catch(e){}location.reload()};
 $('#pb').onclick=async()=>{const a=dig($('#np1').value),e=$('#perr');e.style.color='#c0392b';
   if(a.length<8){e.textContent='رمز باید حداقل ۸ نویسه باشد.';return}
@@ -504,7 +507,7 @@ $('#fi').onchange=async()=>{const f0=$('#fi').files[0];$('#fi').value='';if(!f0)
 // ---- اطلاعات تکمیلی دانش‌آموز (همه اختیاری) ----
 const EDU=['بی‌سواد','ابتدایی','سیکل','دیپلم','فوق‌دیپلم','لیسانس','فوق‌لیسانس','دکتری','حوزوی'];
 const JOBS=['فرهنگی','نظامی و انتظامی','بهداشت و درمانی','خانه دار','سایر کارمندان دولت','آزاد تجاری','آزاد صنعتی','آزاد هنری','آزاد خدماتی','کارگر ساده','کارمند موسسات غیردولتی','بازنشسته','بیکار','سایر','هنوز در حال تحصیل است'];
-const parentF=(w,n)=>[[w+'_first','نام '+n,'t'],[w+'_last','نام خانوادگی '+n,'t'],[w+'_nid','کد ملی '+n+' (۱۰ رقم)','n10'],[w+'_birth','تاریخ تولد '+n+' (مثال: ۱۳۶۵/۰۳/۱۰)','d'],[w+'_birth_place','شهر محل تولد '+n,'t'],[w+'_edu','میزان تحصیلات '+n,'s',EDU],[w+'_job','شغل '+n,'s',JOBS],[w+'_work_phone','تلفن محل کار '+n+' (با پیش‌شماره)','tel'],[w+'_work_addr','نشانی محل کار '+n,'a']];
+const parentF=(w,n)=>[[w+'_first','نام '+n,'t'],[w+'_last','نام خانوادگی '+n,'t'],[w+'_nid','کد ملی '+n+' (۱۰ رقم)','nf'],[w+'_birth','تاریخ تولد '+n+' (مثال: ۱۳۶۵/۰۳/۱۰)','d'],[w+'_birth_place','شهر محل تولد '+n,'t'],[w+'_edu','میزان تحصیلات '+n,'s',EDU],[w+'_job','شغل '+n,'s',JOBS],[w+'_work_phone','تلفن محل کار '+n+' (با پیش‌شماره)','tel'],[w+'_work_addr','نشانی محل کار '+n,'a']];
 const SEC=[
  ['اطلاعات پدر',parentF('father','پدر')],
  ['اطلاعات مادر',parentF('mother','مادر')],
@@ -513,7 +516,7 @@ const SEC=[
  ['وضعیت سکونت و سرپرستی',[['living_with','دانش‌آموز با چه کسانی زندگی می‌کند','s',['با پدر و مادر','فقط با پدر','فقط با مادر','با سرپرست قانونی']],['guardian_type','نوع سرپرست (در صورت سرپرست قانونی)','t'],['guardian_name','نام سرپرست قانونی','t'],['special_status','وضعیت‌های خاص خانواده','m',['ایثارگری','خانواده شهدا','جانباز','کمیته امداد','بهزیستی']]]],
  ['سوابق سلامت',[['blood','گروه خونی','s',['A+','A-','B+','B-','AB+','AB-','O+','O-','نامشخص']],['vision','وضعیت بینایی','s',['سالم','نیازمند عینک','آستیگمات','نیازمند نشستن در ردیف جلو']],['hearing','وضعیت شنوایی','s',['سالم','نیازمند سمعک','دارای افت شنوایی']],['mobility','وضعیت حرکتی و جسمانی','s',['بدون مشکل','معافیت از ورزش یا محدودیت حرکتی']],['conditions','بیماری خاص، آلرژی (دارویی/غذایی) و داروهای مصرفی','a']]]
 ];
-const NUMT=['n10','p','tel','post','six','y'];
+const NUMT=['n10','p','tel','post','six','y','nf'];
 const validPDate=v=>{const m=/^(\d{4})\/(\d{2})\/(\d{2})$/.exec(v);if(!m)return false;const y=+m[1],mo=+m[2],d=+m[3];return y>=1300&&y<=1410&&mo>=1&&mo<=12&&d>=1&&d<=(mo<=6?31:30)};
 const vx={
  n10:v=>validId(v)?'':'کد ملی معتبر نیست.',
@@ -541,7 +544,8 @@ const TSTATIC=[['marital_status','وضعیت تاهل'],['postal_code','کد پ�
 function osRow(box,n,h){const r=document.createElement('div');r.className='osr';r.innerHTML='<input placeholder="نام مدرسه"><input class="ltr" inputmode="decimal" placeholder="ساعت در هفته" style="max-width:130px"><button type="button" class="btn sec sm">✕</button>';r.children[0].value=n||'';r.children[1].value=h??'';r.children[2].onclick=()=>r.remove();box.append(r)}
 function buildSec(S,el,pre){
   $(el).innerHTML=S.map(([t,f])=>`<details class="banner" style="margin-top:12px"><summary style="cursor:pointer;font-weight:600">${t}</summary>${t.includes('سلامت')?'<div class="banner wn" style="margin-top:8px">این اطلاعات فقط برای مدیر مدرسه قابل مشاهده است و برای ایمنی ثبت می‌شود.</div>':''}${t.includes('بانکی')?'<div class="banner wn" style="margin-top:8px">اطلاعات حساب فقط برای مدیر مدرسه قابل مشاهده است و برای امور مالی استفاده می‌شود.</div>':''}<div class="grid" style="margin-top:10px">${f.map(([k,l,ty,o])=>
-    ty==='a'?`<div style="grid-column:1/-1"><label>${l}</label><textarea id="${pre}${k}" rows="2"></textarea></div>`
+    ty==='nf'?`<div><label>${l}</label><input id="${pre}${k}" class="ltr" inputmode="numeric" maxlength="16"><label style="display:flex;align-items:center;gap:6px;margin-top:4px;color:var(--tx)"><input type="checkbox" id="${pre}${k}_f" style="width:auto">اتباع خارجی (کد یکتا به‌جای کد ملی)</label></div>`
+    :ty==='a'?`<div style="grid-column:1/-1"><label>${l}</label><textarea id="${pre}${k}" rows="2"></textarea></div>`
     :ty==='m'?`<div style="grid-column:1/-1"><label>${l}</label><div class="chips" id="${pre}${k}">${o.map(v=>`<label><input type="checkbox" value="${v}">${v}</label>`).join('')}</div></div>`
     :ty==='o'?`<div style="grid-column:1/-1"><label>${l}</label><div id="${pre}${k}"></div><button type="button" class="btn sec sm" data-addos="${pre}${k}">+ افزودن مدرسه</button></div>`
     :ty==='s'?`<div><label>${l}</label><select id="${pre}${k}"><option value="">انتخاب کنید</option>${o.map(v=>`<option>${v}</option>`).join('')}</select></div>`
@@ -551,10 +555,12 @@ function buildSec(S,el,pre){
 function fillSec(S,pre,ex){for(const [t,f] of S)for(const [k,l,ty] of f){
   if(ty==='m')document.querySelectorAll('#'+pre+k+' input').forEach(i=>i.checked=(ex[k]||[]).includes(i.value));
   else if(ty==='o'){const b=document.getElementById(pre+k);b.innerHTML='';(ex[k]||[]).forEach(x=>osRow(b,x.name,x.hours))}
-  else document.getElementById(pre+k).value=ex[k]??''}}
+  else{document.getElementById(pre+k).value=ex[k]??'';if(ty==='nf')document.getElementById(pre+k+'_f').checked=!!ex[k+'_foreign']}}}
 function collectSec(S,pre){const ex={};let err='';
   for(const [t,f] of S)for(const [k,l,ty] of f){
     let v;
+    if(ty==='nf'){v=normV(ty,document.getElementById(pre+k).value);const fr=document.getElementById(pre+k+'_f').checked;
+      if(v){const bad=fr?(/^\d{10,16}$/.test(v)?'':'کد یکتا باید ۱۰ تا ۱۶ رقم عددی باشد.'):(validId(v)?'':'کد ملی معتبر نیست.');if(bad&&!err)err=l+': '+bad;ex[k]=v;if(fr)ex[k+'_foreign']=true}continue}
     if(ty==='m')v=[...document.querySelectorAll('#'+pre+k+' input:checked')].map(i=>i.value);
     else if(ty==='o'){v=[...document.querySelectorAll('#'+pre+k+' .osr')].map(r=>({name:r.children[0].value.trim(),hours:dig(r.children[1].value)})).filter(x=>x.name);
       for(const x of v){if(x.hours!==''&&!(isFinite(+x.hours)&&+x.hours>=0&&+x.hours<=80)&&!err)err=l+': ساعت هر مدرسه باید عددی بین ۰ تا ۸۰ باشد.';x.hours=x.hours===''?null:+x.hours}}
@@ -563,7 +569,7 @@ function collectSec(S,pre){const ex={};let err='';
     if(vx[ty]){const m=vx[ty](v);if(m&&!err)err=l+': '+m}
     ex[k]=v}
   return {ex,err}}
-function extraHtmlS(S,ex){return S.map(([t,f])=>{const rows=f.filter(([k])=>{const v=ex[k];return v&&(!Array.isArray(v)||v.length)}).map(([k,l])=>esc(l)+': '+esc(fv(ex[k])));return rows.length?`<hr><b>${t}</b><br>${rows.join('<br>')}`:''}).join('')}
+function extraHtmlS(S,ex){return S.map(([t,f])=>{const rows=f.filter(([k])=>{const v=ex[k];return v&&(!Array.isArray(v)||v.length)}).map(([k,l])=>esc(l)+': '+esc(fv(ex[k]))+(ex[k+'_foreign']?' (اتباع خارجی)':''));return rows.length?`<hr><b>${t}</b><br>${rows.join('<br>')}`:''}).join('')}
 const buildExtra=()=>buildSec(SEC,'#s_extra','x_'),fillExtra=()=>fillSec(SEC,'x_',me.student_extra||{}),collectExtra=()=>collectSec(SEC,'x_'),extraHtml=s=>extraHtmlS(SEC,s.student_extra||{});
 const buildT=()=>buildSec(TSEC,'#t_extra','tx_'),fillT=ex=>{fillSec(TSEC,'tx_',ex);$('#t_marital').value=ex.marital_status||'';$('#t_postal').value=ex.postal_code||''},collectT=()=>collectSec(TSEC,'tx_');
 const extraHtmlT=s=>{const ex=s.teacher_extra||{};const st=TSTATIC.filter(([k])=>ex[k]).map(([k,l])=>esc(l)+': '+esc(ex[k]));return (st.length?`<hr><b>اطلاعات تکمیلی</b><br>${st.join('<br>')}`:'')+extraHtmlS(TSEC,ex)};
@@ -633,7 +639,7 @@ function renderStudents(){
   $('#imp_s_cnt').textContent='واردشده از اکسل و هنوز وارد سامانه نشده: '+impCnt.student+' نفر';
   const q=dig($('#sq').value);
   const L=students.filter(s=>!q||[s.full_name,s.national_id].some(v=>String(v||'').includes(q)));
-  $('#stb').innerHTML=L.map((s,i)=>{const ok=s.birth_date&&s.photo_path,ex=s.student_extra||{};return `<tr><td>${i+1}</td><td>${thumbHtml(s)}</td><td dir="ltr">${esc(s.national_id)}</td><td><a href="#" data-sd="${esc(s.id)}">${esc(s.first_name||s.full_name)}</a></td><td>${esc(s.last_name)}</td><td>${esc(((ex.father_first||'')+' '+(ex.father_last||'')).trim())}</td><td dir="ltr">${esc(s.birth_date)}</td><td dir="ltr">${esc(ex.cert_serial)}</td><td dir="ltr">${esc(s.mother_mobile)}</td><td dir="ltr">${esc(s.father_mobile)}</td><td><span class="tag ${ok?'ok':'wn'}">${ok?'کامل':'ناقص'}</span></td></tr>`+(sopen===s.id?`<tr><td colspan="11" class="det">تاریخ تولد: ${esc(s.birth_date)}<br>تلفن پدر: ${esc(s.father_mobile)} | تلفن مادر: ${esc(s.mother_mobile)} | تلفن ثابت: ${esc(s.home_phone)}<br>${extraHtml(s)}<img id="sph" class="hide" alt="" style="max-width:150px;border-radius:6px;margin-top:6px"><hr><b>رمز عبور:</b> ${s.must_change?(s.pw_is_code?('هنوز تغییر نداده؛ رمز فعلی همان کد ملی است ('+esc(s.national_id)+')'):'رمز موقت توسط مدیر تعیین شده و هنوز تغییر نکرده است'):'توسط خود کاربر تغییر کرده و قابل مشاهده نیست'}<div class="row" style="margin-top:6px"><input id="snpw" placeholder="رمز جدید (حداقل ۸ نویسه)" class="ltr" style="max-width:220px"><button class="btn sm" data-ssp="${esc(s.id)}">تنظیم رمز</button><button class="btn sec sm" data-srp="${esc(s.id)}">بازنشانی به کد ملی</button></div><div style="margin-top:8px"><button class="btn sec sm" data-sdel="${esc(s.id)}" style="color:#c0392b">🗑 حذف دانش‌آموز از فهرست</button></div></td></tr>`:'')}).join('');
+  $('#stb').innerHTML=L.map((s,i)=>{const ok=s.birth_date&&s.photo_path,ex=s.student_extra||{};return `<tr><td>${i+1}</td><td>${thumbHtml(s)}</td><td dir="ltr">${esc(s.national_id)}${s.is_foreign?' <span class="tag wn">اتباع</span>':''}</td><td><a href="#" data-sd="${esc(s.id)}">${esc(s.first_name||s.full_name)}</a></td><td>${esc(s.last_name)}</td><td>${esc(((ex.father_first||'')+' '+(ex.father_last||'')).trim())}</td><td dir="ltr">${esc(s.birth_date)}</td><td dir="ltr">${esc(ex.cert_serial)}</td><td dir="ltr">${esc(s.mother_mobile)}</td><td dir="ltr">${esc(s.father_mobile)}</td><td><span class="tag ${ok?'ok':'wn'}">${ok?'کامل':'ناقص'}</span></td></tr>`+(sopen===s.id?`<tr><td colspan="11" class="det">تاریخ تولد: ${esc(s.birth_date)}<br>تلفن پدر: ${esc(s.father_mobile)} | تلفن مادر: ${esc(s.mother_mobile)} | تلفن ثابت: ${esc(s.home_phone)}<br>${extraHtml(s)}<img id="sph" class="hide" alt="" style="max-width:150px;border-radius:6px;margin-top:6px"><hr><b>رمز عبور:</b> ${s.must_change?(s.pw_is_code?('هنوز تغییر نداده؛ رمز فعلی همان کد ملی است ('+esc(s.national_id)+')'):'رمز موقت توسط مدیر تعیین شده و هنوز تغییر نکرده است'):'توسط خود کاربر تغییر کرده و قابل مشاهده نیست'}<div class="row" style="margin-top:6px"><input id="snpw" placeholder="رمز جدید (حداقل ۸ نویسه)" class="ltr" style="max-width:220px"><button class="btn sm" data-ssp="${esc(s.id)}">تنظیم رمز</button><button class="btn sec sm" data-srp="${esc(s.id)}">بازنشانی به کد ملی</button></div><div style="margin-top:8px"><button class="btn sec sm" data-sdel="${esc(s.id)}" style="color:#c0392b">🗑 حذف دانش‌آموز از فهرست</button></div></td></tr>`:'')}).join('');
   $('#stb').insertAdjacentHTML('beforeend',impRowsHtml('student',L.length,q));bindImpDel($('#stb'));
   $('#stb').querySelectorAll('[data-sd]').forEach(a=>a.onclick=e=>{e.preventDefault();sopen=sopen===a.dataset.sd?null:a.dataset.sd;renderStudents()});
   $('#stb').querySelectorAll('[data-ssp]').forEach(b=>b.onclick=()=>{const v=dig($('#snpw').value);if(v.length<8){alert('رمز باید حداقل ۸ نویسه باشد.');return}adminSetPw(b.dataset.ssp,v)});
@@ -1194,7 +1200,7 @@ function renderSchoolInfo(){const k=me&&me.admin_school,box=$('#schinfo_f');if(!
 function renderAdmin(){
   renderSchoolInfo();
   $('#imp_t_cnt').textContent='واردشده از اکسل و هنوز وارد سامانه نشده: '+impCnt.teacher+' نفر';
-  $('#regs').innerHTML=regs.length?`<table><tbody>${regs.map(r=>`<tr><td>${r.kind==='student'?'دانش‌آموز':'همکار'}${(r.schools||[]).length>1?' (هر دو مدرسه)':''}</td><td>${esc(r.full_name)}</td><td dir="ltr">${esc(r.personnel_code)}</td><td dir="ltr">${esc(r.mobile)}</td><td><button class="btn sm" data-ra="${esc(r.personnel_code)}">تأیید</button> <button class="btn sec sm" data-rr="${esc(r.personnel_code)}">رد</button></td></tr>`).join('')}</tbody></table>`:'<div class="banner">درخواست جدیدی وجود ندارد.</div>';
+  $('#regs').innerHTML=regs.length?`<table><tbody>${regs.map(r=>`<tr><td>${r.kind==='student'?'دانش‌آموز'+(r.is_foreign?' (اتباع)':''):'همکار'}${(r.schools||[]).length>1?' (هر دو مدرسه)':''}</td><td>${esc(r.full_name)}</td><td dir="ltr">${esc(r.personnel_code)}</td><td dir="ltr">${esc(r.mobile)}</td><td><button class="btn sm" data-ra="${esc(r.personnel_code)}">تأیید</button> <button class="btn sec sm" data-rr="${esc(r.personnel_code)}">رد</button></td></tr>`).join('')}</tbody></table>`:'<div class="banner">درخواست جدیدی وجود ندارد.</div>';
   $('#regs').querySelectorAll('[data-ra]').forEach(b=>b.onclick=async()=>{b.disabled=true;const c=b.dataset.ra;
     const r=await sb.rpc('approve_registration',{p_code:c,p_school:me.admin_school});if(r.error){alert(r.error.message);b.disabled=false;return}
     const tmp=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}});
