@@ -47,14 +47,14 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 .tw{overflow-x:auto}.det{background:var(--bg);font-size:13px;color:var(--mu)}
 .tag{padding:2px 10px;border-radius:12px;font-size:12px;background:var(--ot)}
 .hide{display:none}
-.credit{color:#e8eefc;text-align:center;font-size:13px;padding:14px 8px 26px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
-.credit a{color:#fff;font-weight:600}
+.credit{color:var(--ft,#e8eefc);text-align:center;font-size:13px;padding:14px 8px 26px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.credit a{color:var(--ft,#fff);font-weight:600}
 .osr{display:flex;gap:6px;margin-bottom:6px}
 .osr input:first-child{flex:1}
 .btn.big{padding:16px 28px;font-size:17px}
 .col{display:flex;flex-direction:column;gap:8px}
 .col .btn{width:100%}
-.schline{color:#fff;text-align:center;font-weight:700;padding:6px 0 10px;font-size:16px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.schline{color:var(--sl,#fff);text-align:center;font-weight:700;padding:6px 0 10px;font-size:16px;text-shadow:0 1px 3px rgba(0,0,0,.4)}
 .stk{font-size:56px;line-height:1.2}
 .m img{max-width:100%;max-height:240px;border-radius:8px;display:block;margin-top:4px}
 .m a{color:var(--pr)}
@@ -203,6 +203,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 </section>
 
 <section id="v-admin" class="card hide">
+<details id="schinfo" class="banner" style="margin-bottom:12px"><summary style="cursor:pointer;font-weight:700">اطلاعات مدرسه (برای سربرگ فرم همکار)</summary><div id="schinfo_f" class="grid" style="margin-top:8px"></div><div class="row" style="margin-top:8px"><button class="btn sm" id="schinfo_save">ذخیره اطلاعات مدرسه</button><span id="schinfo_msg" style="font-size:13px"></span></div></details>
 <div class="banner"><b>ورود اطلاعات دبیران از اکسل</b>
 <div style="font-size:13px;color:var(--mu);margin-top:4px">فایل اکسل (.xlsx) با ستون‌های: کد پرسنلی (۸ رقمی) / نام / نام خانوادگی / تلفن همراه. دبیران واردشده با کد (به‌عنوان نام کاربری و رمز اولیه) مستقیم وارد می‌شوند و بقیه ثبت‌نام اولیه می‌کنند.</div>
 <div class="row" style="margin-top:8px"><button class="btn sm" id="imp_t_pick">انتخاب فایل اکسل</button><button class="btn sec sm" id="imp_t_tpl">دانلود قالب نمونه</button><button class="btn sec sm" id="imp_t_help">📘 راهنما</button><input type="file" id="imp_t_file" accept=".xlsx" class="hide"></div>
@@ -276,12 +277,15 @@ let SCH={},THEME={};
 const cuser=v=>dig(v).replace(/[\s\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g,'');
 const fg=c=>{const n=parseInt(c.slice(1),16),r=n>>16,g=n>>8&255,b=n&255;return(0.299*r+0.587*g+0.114*b)>150?'#111111':'#ffffff'};
 function schColor(){try{const k=me?(me.role==='admin'?me.admin_school:me.role==='student'?me.school:chatSchool):null;return(k&&SCH[k]&&SCH[k].c)||''}catch(e){return ''}}
-function applyTheme(){const r=document.documentElement.style,t=THEME||{};
+function applyTheme(){const r=document.documentElement.style,t=THEME||{},B=TPRE.blue;
   const set=(v,c)=>c?r.setProperty(v,c):r.removeProperty(v);
-  const pr=schColor()||t.pr;set('--pr',pr);set('--prt',schColor()?fg(pr):(t.bt||(pr?fg(pr):'')));set('--ac',t.ac);set('--act',fg(t.ac||'#d9822b'));set('--card',t.card);set('--bg',t.bg);set('--tx',t.tx);
-  document.body.style.background=(t.g1||t.g2)?`${t.g1||'#091731'} linear-gradient(160deg,${t.g1||'#091731'} 0%,${t.g2||'#12356b'} 100%) fixed`:'';
+  const pr=schColor()||t.pr;set('--pr',pr);set('--prt',schColor()?fg(pr):(t.bt||(pr?fg(pr):'')));
+  set('--ac',t.ac);set('--act',t.act||fg(t.ac||B.ac));
+  [['card','--card'],['bg','--bg'],['tx','--tx'],['mu','--mu'],['br','--br'],['ot','--ot'],['me','--me'],['ok','--ok'],['wn','--wn'],['sl','--sl'],['ft','--ft']].forEach(([k,v])=>set(v,t[k]));
+  document.body.style.background=(t.g1||t.gm||t.g2)?`${t.g1||B.g1} linear-gradient(160deg,${t.g1||B.g1} 0%,${t.gm||B.gm} 55%,${t.g2||B.g2} 100%) fixed`:'';
   $('#htitle').textContent='🏫 '+(t.title||'پورتال مدارس');document.title=t.title||'پورتال مدرسه'}
-async function loadTheme(){const {data}=await sb.from('app_settings').select('value').eq('key','theme').maybeSingle();THEME=(data&&data.value)||{};applyTheme()}
+async function loadTheme(){if(/[?&]reset-theme/.test(location.search)){THEME={};applyTheme();return}
+  const {data}=await sb.from('app_settings').select('value').eq('key','theme').maybeSingle();THEME=(data&&data.value)||{};applyTheme()}
 function pwWarn(){const el=$('#pwwarn');if(!el)return;
   if(!me||me.role!=='admin'){el.classList.add('hide');return}
   const last=Math.max(new Date(me.pw_changed_at||0).getTime(),new Date(me.pw_warned_at||0).getTime());
@@ -812,13 +816,19 @@ $('#coop_copy').onclick=()=>{
 $('#chs').onchange=async()=>{chatSchool=$('#chs').value;await loadMsgs();renderChat()};
 
 // ---- پنل سازنده ----
+const TKEYS=[['g1','پس‌زمینه صفحه (رنگ اول)'],['gm','پس‌زمینه صفحه (رنگ میانی)'],['g2','پس‌زمینه صفحه (رنگ آخر)'],['card','پنل‌ها و کارت‌ها'],['bg','کادر ورودی‌ها و زمینه جزئیات'],['tx','نوشته‌ها'],['mu','نوشته‌های کمرنگ'],['br','حاشیه‌ها'],['pr','دکمه‌ها در حالت عادی (همه دکمه‌ها همرنگ)'],['bt','نوشته روی دکمه‌ها'],['ac','دکمه انتخاب‌شده / فعال (تب فعال و هنگام کلیک)'],['act','نوشته روی دکمه انتخاب‌شده'],['ot','حباب پیام دیگران و برچسب‌ها'],['me','حباب پیام‌های خودم'],['ok','پیام موفقیت و تأیید'],['wn','پیام هشدار و در انتظار'],['sl','نوشته نام مدرسه بالای صفحه'],['ft','نوشته پایین صفحه (سازنده)']];
+const TPRE={
+ blue:{g1:'#091731',gm:'#12356b',g2:'#0a2147',card:'#d3dcea',bg:'#eef2f8',tx:'#1b2433',mu:'#4a5870',br:'#a9b7cc',pr:'#2457c5',bt:'#ffffff',ac:'#d9822b',act:'#111111',ot:'#e4eaf4',me:'#bcd0f2',ok:'#117a45',wn:'#a15c07',sl:'#ffffff',ft:'#e8eefc'},
+ green:{g1:'#0b2a1c',gm:'#14532d',g2:'#0b2e20',card:'#d1ffe3',bg:'#eef7f0',tx:'#1b2433',mu:'#41584a',br:'#67d08a',pr:'#2f6b45',bt:'#ffffff',ac:'#e8a317',act:'#1b2433',ot:'#e3f0e7',me:'#c4e5cf',ok:'#117a45',wn:'#b80a0a',sl:'#ffffff',ft:'#ebe40f'},
+ purple:{g1:'#1a0b2e',gm:'#4c1d95',g2:'#231042',card:'#e9dcff',bg:'#f5f0ff',tx:'#231a33',mu:'#5b4a78',br:'#b69be0',pr:'#6d3fc0',bt:'#ffffff',ac:'#e8a317',act:'#1b1424',ot:'#efe6fb',me:'#d8c6f5',ok:'#117a45',wn:'#b45309',sl:'#ffffff',ft:'#e9defa'},
+ gray:{g1:'#1c1f24',gm:'#3a4049',g2:'#23272d',card:'#dfe3e8',bg:'#f1f3f5',tx:'#1f2430',mu:'#55606e',br:'#aab2bd',pr:'#4b5563',bt:'#ffffff',ac:'#e8a317',act:'#1f2430',ot:'#e8ebef',me:'#cfd6df',ok:'#117a45',wn:'#a15c07',sl:'#ffffff',ft:'#e5e9ee'}};
 async function renderCreator(){
   await loadSchools();
   const ad=await sb.from('profiles').select('id,admin_school,username,full_name').eq('role','admin');const admins=ad.data||[];
   $('#cr_stats').innerHTML='<b>مدارس تعریف‌شده</b> – هر مدرسه پس از «فعال کردن» در صفحه اول نمایش داده می‌شود و ثبت‌نام و ورود مدیرش ممکن می‌شود.';
-  const T=THEME||{},D={pr:'#2457c5',bt:'#ffffff',ac:'#d9822b',card:'#d3dcea',bg:'#eef2f8',tx:'#1b2433',g1:'#091731',g2:'#12356b'};
-  const cl=(id,l)=>`<label style="display:flex;align-items:center;gap:6px">${l}<input type="color" id="th_${id}" value="${esc(T[id]||D[id])}"></label>`;
-  let h=`<div class="banner"><b>ظاهر برنامه</b><div class="row" style="margin-top:8px"><input id="th_title" value="${esc(T.title||'')}" placeholder="عنوان بالای صفحه (پیش‌فرض: پورتال مدارس)" style="max-width:320px"></div><div class="row" style="margin-top:8px">${cl('pr','رنگ دکمه‌ها')}${cl('bt','رنگ نوشته روی دکمه‌ها')}${cl('ac','رنگ دکمه انتخاب‌شده (تب فعال)')}${cl('card','رنگ کارت‌ها و سربرگ')}${cl('bg','رنگ زمینه بخش‌های جزئی')}${cl('tx','رنگ نوشته‌های متن')}${cl('g1','پس‌زمینه صفحه (بالا)')}${cl('g2','پس‌زمینه صفحه (پایین)')}</div><div class="row" style="margin-top:8px"><button class="btn sm" id="th_save">ذخیره ظاهر</button><button class="btn sec sm" id="th_reset">بازگشت به پیش‌فرض</button></div><div style="font-size:12px;margin-top:6px">تغییرها هنگام انتخاب رنگ پیش‌نمایش داده می‌شوند و با «ذخیره ظاهر» برای همه ثبت می‌شوند. پس‌زمینه صفحه را تیره انتخاب کنید تا نوشته‌های سفید خوانا بماند. به‌طور پیش‌فرض همه دکمه‌ها یک رنگ‌اند و فقط تب انتخاب‌شده رنگ متفاوت دارد. رنگ هر مدرسه، رنگ دکمه‌ها را فقط برای اعضای همان مدرسه عوض می‌کند و نوشته روی آن‌ها خودکار خوانا می‌شود.</div></div>`;
+  const T=THEME||{},D=TPRE.blue;
+  const sw=(i,l)=>`<div><label>${l}</label><div class="row" style="flex-wrap:nowrap"><input type="color" id="th_${i}" value="${esc(T[i]||D[i])}" style="width:46px;padding:2px;flex:none"><input id="thx_${i}" class="ltr" value="${esc(T[i]||D[i])}" maxlength="7"></div></div>`;
+  let h=`<div class="banner"><b>رنگ‌بندی برنامه</b><div style="font-size:13px;color:#b80a0a;border:1px solid var(--br);border-radius:8px;padding:8px 10px;margin:8px 0">تغییر رنگ‌ها برای همه کاربران اعمال می‌شود. اگر رنگ‌ها ناخوانا شد، «بازگشت به پیش‌فرض» را بزنید یا آدرس سایت را با <span dir="ltr">?reset-theme</span> در انتها باز کنید.</div><div class="row" style="margin-bottom:8px">${[['blue','آبی تیره (پیش‌فرض)'],['green','سبز'],['purple','بنفش'],['gray','خاکستری']].map(([k,l])=>`<button class="btn sm" data-pre="${k}">${l}</button>`).join('')}</div><div class="row" style="margin-bottom:10px"><input id="th_title" value="${esc(T.title||'')}" placeholder="عنوان بالای صفحه (پیش‌فرض: پورتال مدارس)" style="max-width:340px"></div><div class="grid">${TKEYS.map(([i,l])=>sw(i,l)).join('')}</div><div class="row" style="margin-top:12px"><button class="btn" id="th_save">ذخیره برای همه کاربران</button><button class="btn" id="th_reset">بازگشت به پیش‌فرض</button></div><div style="font-size:12px;margin-top:8px">رنگ هر مدرسه (در کارت همان مدرسه) رنگ دکمه‌ها را فقط برای اعضای همان مدرسه عوض می‌کند.</div></div>`;
   h+=`<div class="banner"><b>افزودن مدرسه جدید</b><div class="row" style="margin-top:8px"><input id="ns_n" placeholder="نام مدرسه" style="max-width:240px"><input id="ns_s" placeholder="شیفت (اختیاری، مثل شیفت صبح)" style="max-width:220px"><button class="btn sm" id="ns_add">افزودن (به‌صورت غیرفعال)</button></div></div>`;
   for(const k of Object.keys(SCH)){const s0=SCH[k];
     const a=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('role','student').eq('school',k);
@@ -840,11 +850,14 @@ async function renderCreator(){
   box.querySelectorAll('[data-st]').forEach(b=>b.onclick=async()=>{const k=b.dataset.st,on=!SCH[k].a;
     if(!confirm(on?'مدرسه فعال شود؟':'مدرسه غیرفعال شود؟ مدیر آن دیگر نمی‌تواند وارد شود و ثبت‌نام جدید بسته می‌شود.'))return;
     const {error}=await sb.rpc('creator_save_school',{p_code:k,p_name:SCH[k].n,p_shift:SCH[k].s,p_active:on});if(error)return fail(error);renderCreator()});
-  const touched=new Set(Object.keys(T).filter(x=>x!=='title'));
+  const keys=TKEYS.map(x=>x[0]),touched=new Set(Object.keys(T).filter(x=>keys.includes(x)));
   const collect=()=>{const o={};touched.forEach(i=>{o[i]=$('#th_'+i).value});const t=$('#th_title').value.trim();if(t)o.title=t;return o};
-  ['pr','bt','ac','card','bg','tx','g1','g2'].forEach(i=>$('#th_'+i).oninput=()=>{touched.add(i);THEME=collect();applyTheme()});
+  const live=i=>{touched.add(i);THEME=collect();applyTheme()};
+  keys.forEach(i=>{$('#th_'+i).oninput=()=>{$('#thx_'+i).value=$('#th_'+i).value;live(i)};
+    $('#thx_'+i).oninput=()=>{const v=$('#thx_'+i).value.trim();if(/^#[0-9a-fA-F]{6}$/.test(v)){$('#th_'+i).value=v;live(i)}}});
+  box.querySelectorAll('[data-pre]').forEach(b=>b.onclick=()=>{const P=TPRE[b.dataset.pre];keys.forEach(i=>{$('#th_'+i).value=P[i];$('#thx_'+i).value=P[i];touched.add(i)});THEME=collect();applyTheme()});
   $('#th_title').oninput=()=>{THEME=collect();applyTheme()};
-  $('#th_save').onclick=async()=>{const {error}=await sb.rpc('creator_save_theme',{p:collect()});if(error)return fail(error);alert('ظاهر برنامه ذخیره شد.')};
+  $('#th_save').onclick=async()=>{const {error}=await sb.rpc('creator_save_theme',{p:collect()});if(error)return fail(error);alert('رنگ‌بندی برای همه کاربران ذخیره شد.')};
   $('#th_reset').onclick=async()=>{if(!confirm('رنگ‌ها و عنوان به حالت پیش‌فرض برگردد؟'))return;const {error}=await sb.rpc('creator_save_theme',{p:{}});if(error)return fail(error);THEME={};applyTheme();renderCreator()};
   box.querySelectorAll('[data-cc]').forEach(b=>b.onclick=async()=>{const k=b.dataset.cc;const {error}=await sb.rpc('creator_set_school_color',{p_code:k,p_color:$('#ec_'+k).value});if(error)return fail(error);await loadSchools();renderHome();renderCreator()});
   box.querySelectorAll('[data-cx]').forEach(b=>b.onclick=async()=>{const {error}=await sb.rpc('creator_set_school_color',{p_code:b.dataset.cx,p_color:null});if(error)return fail(error);await loadSchools();renderHome();renderCreator()});
@@ -1171,7 +1184,15 @@ function bindImpDel(el){el.querySelectorAll('[data-idel]').forEach(b=>b.onclick=
   const {error}=await sb.rpc('delete_import',{p_code:b.dataset.idel,p_school:me.admin_school});
   if(error){alert('انجام نشد: '+error.message+' (آیا schema_v12.sql اجرا شده است؟)');return}
   await loadList();renderAdmin();renderStudents()})}
+const SCHF=[['level','مقطع (مثل متوسطه اول)'],['office','نام اداره آموزش و پرورش (مثال: اداره آموزش و پرورش شهرستان ...)'],['province','استان'],['code','کد آموزشگاه'],['phone','تلفن آموزشگاه'],['address','نشانی آموزشگاه']];
+function renderSchoolInfo(){const k=me&&me.admin_school,box=$('#schinfo_f');if(!k||!box||box.dataset.k===k)return;box.dataset.k=k;const I=(SCH[k]||{}).i||{};
+  box.innerHTML=SCHF.map(([f,l])=>`<div><label>${l}</label><input id="si_${f}" value="${esc(I[f]||'')}" maxlength="150"></div>`).join('');
+  $('#schinfo_save').onclick=async()=>{const o={};SCHF.forEach(([f])=>{const v=$('#si_'+f).value.trim();if(v)o[f]=v});
+    const {error}=await sb.rpc('admin_set_school_info',{p_info:o});const m=$('#schinfo_msg');
+    if(error){m.style.color='#c0392b';m.textContent='انجام نشد: '+error.message;return}
+    if(SCH[k])SCH[k].i=o;m.style.color='#1e8449';m.textContent='ذخیره شد؛ از این پس در فرم همکاران نمایش داده می‌شود.'}}
 function renderAdmin(){
+  renderSchoolInfo();
   $('#imp_t_cnt').textContent='واردشده از اکسل و هنوز وارد سامانه نشده: '+impCnt.teacher+' نفر';
   $('#regs').innerHTML=regs.length?`<table><tbody>${regs.map(r=>`<tr><td>${r.kind==='student'?'دانش‌آموز':'همکار'}${(r.schools||[]).length>1?' (هر دو مدرسه)':''}</td><td>${esc(r.full_name)}</td><td dir="ltr">${esc(r.personnel_code)}</td><td dir="ltr">${esc(r.mobile)}</td><td><button class="btn sm" data-ra="${esc(r.personnel_code)}">تأیید</button> <button class="btn sec sm" data-rr="${esc(r.personnel_code)}">رد</button></td></tr>`).join('')}</tbody></table>`:'<div class="banner">درخواست جدیدی وجود ندارد.</div>';
   $('#regs').querySelectorAll('[data-ra]').forEach(b=>b.onclick=async()=>{b.disabled=true;const c=b.dataset.ra;
