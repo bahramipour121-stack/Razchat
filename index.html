@@ -380,6 +380,40 @@ $('#pb').onclick=async()=>{const a=dig($('#np1').value),e=$('#perr');e.style.col
 if(initErr){['li','rb','go_stu','go_tch'].forEach(i=>$('#'+i).disabled=true);aerr(initErr==='lib'?'کتابخانه Supabase بارگذاری نشد. اینترنت یا فیلترشکن را بررسی کنید.':'SUPABASE_URL درست وارد نشده است. باید شبیه https://xxxx.supabase.co باشد، بدون / آخر و بدون rest/v1.')}
 else{loadSchools().then(renderHome).catch(()=>{});loadTheme().catch(()=>{});sb.auth.getSession().then(({data})=>{if(data&&data.session)$('#out').classList.remove('hide')}).catch(()=>{});sb.auth.onAuthStateChange((ev,s)=>{if(ev==='TOKEN_REFRESHED')return;if(ev==='PASSWORD_RECOVERY')tab='acct';setTimeout(()=>onSession(s),0)})}
 
+let mfaP=null;
+function mfaGate(){
+  if(mfaP)return mfaP;
+  const run=async()=>{
+    try{const a=await sb.auth.mfa.getAuthenticatorAssuranceLevel();if(a.data&&a.data.currentLevel==='aal2')return true}catch(e){}
+    const ov=document.createElement('div');ov.id='mfa';ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto';
+    document.body.append(ov);
+    const card=t=>{ov.innerHTML=`<div class="card" style="max-width:430px;width:100%;text-align:center">${t}</div>`};
+    const leave=r=>{ov.remove();$('#out').click();r(false)};
+    let fid='',enr=null,fail='';
+    try{
+      const l=await sb.auth.mfa.listFactors();const all=(l.data&&l.data.all)||[];
+      for(const x of all.filter(x=>x.status==='unverified'))await sb.auth.mfa.unenroll({factorId:x.id});
+      const ver=all.find(x=>x.factor_type==='totp'&&x.status==='verified');
+      if(ver)fid=ver.id;
+      else{const e=await sb.auth.mfa.enroll({factorType:'totp',friendlyName:'creator-'+Date.now()});
+        if(e.error)throw e.error;fid=e.data.id;enr=e.data.totp}
+    }catch(e){fail=e.message||String(e)}
+    return await new Promise(res=>{
+      if(fail){card(`<h3>ورود دو مرحله‌ای سازنده</h3><p style="color:#c0392b">فعال‌سازی ناموفق بود: ${esc(fail)}</p><p>در Supabase از بخش Authentication، قسمت Multi-Factor، گزینه TOTP را فعال کنید.</p><button class="btn" id="mfa_out">خروج</button>`);$('#mfa_out').onclick=()=>leave(res);return}
+      const intro=enr?`<p>برای امنیت بیشتر، یک بار برنامه تأیید هویت (Google Authenticator، Microsoft Authenticator، Authy یا مشابه) را راه‌اندازی کنید. کد QR را اسکن کنید، یا اگر نشد کلید زیر را دستی وارد کنید. بعد کد ۶ رقمی نمایش‌داده‌شده را بزنید.</p><img src="${enr.qr_code}" alt="QR" style="width:200px;height:200px;background:#fff;padding:6px;border-radius:8px"><div dir="ltr" style="font-family:monospace;font-size:13px;word-break:break-all;margin:8px 0;user-select:all">${esc(enr.secret)}</div>`:`<p>کد ۶ رقمی برنامه تأیید هویت خود را وارد کنید.</p>`;
+      card(`<h3>ورود دو مرحله‌ای سازنده</h3>${intro}<input id="mfa_c" class="ltr" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="text-align:center;font-size:22px;letter-spacing:6px"><div id="mfa_m" style="color:#c0392b;min-height:22px"></div><div class="row" style="justify-content:center"><button class="btn" id="mfa_ok">تأیید</button><button class="btn" id="mfa_out">خروج</button></div>`);
+      const go=async()=>{const code=dig($('#mfa_c').value).replace(/\D/g,'');const m=$('#mfa_m');
+        if(code.length!==6){m.textContent='کد باید ۶ رقم باشد.';return}
+        $('#mfa_ok').disabled=true;m.textContent='';
+        const ch=await sb.auth.mfa.challenge({factorId:fid});
+        const v=ch.error?ch:await sb.auth.mfa.verify({factorId:fid,challengeId:ch.data.id,code});
+        if(v.error){$('#mfa_ok').disabled=false;m.textContent='کد نادرست است یا منقضی شده؛ کد جدید را وارد کنید.';return}
+        ov.remove();res(true)};
+      $('#mfa_ok').onclick=go;$('#mfa_c').onkeydown=e=>{if(e.key==='Enter')go()};$('#mfa_out').onclick=()=>leave(res);$('#mfa_c').focus()});
+  };
+  mfaP=run().finally(()=>{mfaP=null});
+  return mfaP;
+}
 async function onSession(s){
   if(s)$('#out').classList.remove('hide');
   try{await loadSchools();renderHome()}catch(e){}
@@ -389,6 +423,7 @@ async function onSession(s){
   me=data;filled=false;sfilled=false;
   mems=[];if(me&&me.role==='teacher'){const rm=await sb.from('memberships').select('*').eq('user_id',me.id);mems=rm.data||[]}
   if(me){chatSchool=me.role==='admin'?me.admin_school:((mems.find(x=>x.status==='approved')||{}).school||null);coopSel=(mems[0]||{}).school||null;if(lastUid!==me.id){lastUid=me.id;tab=me.role==='creator'?'creator':me.role==='admin'?'admin':me.role==='student'?'stu':(mems.some(x=>x.status==='approved')?'chat':'form')}}
+  if(me&&me.role==='creator'){const ok=await mfaGate();if(!ok)return}
   applyTheme();pwWarn();
   $('#auth').classList.add('hide');$('#app').classList.remove('hide');$('#out').classList.remove('hide');$('#who').classList.remove('hide');
   if(!me){$('#banner').className='banner wn';$('#banner').textContent='ورود انجام شد اما پروفایل شما خوانده نشد'+(pe?': '+pe.message:'')+'. مطمئن شوید schema.sql کامل اجرا شده و برای این کاربر ردیف پروفایل ساخته شده است.';return}
