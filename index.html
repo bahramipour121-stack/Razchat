@@ -385,7 +385,7 @@ async function onSession(s){
   try{await loadSchools();renderHome()}catch(e){}
   if(chan){sb.removeChannel(chan);chan=null}
   if(!s){me=null;applyTheme();msgs=[];list=[];mems=[];lastUid=null;filled=false;aview('a_home');$('#auth').classList.remove('hide');$('#app').classList.add('hide');$('#who').classList.add('hide');return}
-  const {data,error:pe}=await sb.from('profiles').select('*').eq('id',s.user.id).single();
+  const {data,error:pe}=await sb.from('profiles_dec').select('*').eq('id',s.user.id).single();
   me=data;filled=false;sfilled=false;
   mems=[];if(me&&me.role==='teacher'){const rm=await sb.from('memberships').select('*').eq('user_id',me.id);mems=rm.data||[]}
   if(me){chatSchool=me.role==='admin'?me.admin_school:((mems.find(x=>x.status==='approved')||{}).school||null);coopSel=(mems[0]||{}).school||null;if(lastUid!==me.id){lastUid=me.id;tab=me.role==='creator'?'creator':me.role==='admin'?'admin':me.role==='student'?'stu':(mems.some(x=>x.status==='approved')?'chat':'form')}}
@@ -448,7 +448,7 @@ $('#save').onclick=async()=>{
   d.teacher_extra={...xr.ex,...(mar?{marital_status:mar}:{}),...(pc?{postal_code:pc}:{})};
   const {error}=await sb.from('profiles').update(d).eq('id',me.id);
   if(error){e.textContent='ذخیره نشد: '+error.message;return}
-  me={...me,...d};if(isAdm()){const r=await sb.from('profiles').select('*').eq('id',me.id).single();if(r.data)me=r.data}e.style.color='var(--ok)';e.textContent='اطلاعات با موفقیت ذخیره شد.';render();setTimeout(()=>e.textContent='',3000);
+  me={...me,...d};if(isAdm()){const r=await sb.from('profiles_dec').select('*').eq('id',me.id).single();if(r.data)me=r.data}e.style.color='var(--ok)';e.textContent='اطلاعات با موفقیت ذخیره شد.';render();setTimeout(()=>e.textContent='',3000);
 };
 
 // ---- گفتگو ----
@@ -1197,13 +1197,14 @@ $('#prt').onclick=()=>{if(!me||!me.full_name||!me.national_id){alert('ابتدا
 let regs=[];
 async function loadList(){
   const sc=me.admin_school;
-  const r=await sb.from('memberships').select('*,profiles(*)').eq('school',sc).order('created_at');
-  list=(r.data||[]).filter(x=>x.profiles).map(x=>({...x.profiles,...(x.details||{}),mstatus:x.status}));
-  const g=await sb.from('registrations').select('*').is('user_id',null).order('created_at');
+  const r=await sb.from('memberships').select('*').eq('school',sc).order('created_at');
+  const ids=(r.data||[]).map(x=>x.user_id),prr=ids.length?await sb.from('profiles_dec').select('*').in('id',ids):{data:[]},pm=Object.fromEntries((prr.data||[]).map(p=>[p.id,p]));
+  list=(r.data||[]).filter(x=>pm[x.user_id]).map(x=>({...pm[x.user_id],...(x.details||{}),mstatus:x.status}));
+  const g=await sb.from('registrations_dec').select('*').is('user_id',null).order('created_at');
   regs=(g.data||[]).filter(x=>(x.sstatus||{})[sc]==='pending');
-  const st=await sb.from('profiles').select('*').eq('role','student').eq('school',sc).order('created_at');
+  const st=await sb.from('profiles_dec').select('*').eq('role','student').eq('school',sc).order('created_at');
   students=st.data||[];
-  const im=await sb.from('registrations').select('*').is('user_id',null).eq('status','approved').contains('sstatus',{[sc]:'approved'}).order('created_at');
+  const im=await sb.from('registrations_dec').select('*').is('user_id',null).eq('status','approved').contains('sstatus',{[sc]:'approved'}).order('created_at');
   impRows=im.data||[];impCnt={teacher:impRows.filter(x=>x.kind==='teacher').length,student:impRows.filter(x=>x.kind==='student').length};
 }
 function impRowsHtml(kind,start,q){
