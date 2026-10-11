@@ -85,7 +85,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <div id="a_reg" class="hide">
 <h3 style="margin-top:0" id="ar_title"></h3>
 <div class="banner" id="ar_sch"></div>
-<div id="rf_wrap" class="hide" style="margin-bottom:8px"><label style="display:flex;align-items:center;gap:8px;color:var(--tx)"><input type="checkbox" id="rf" style="width:auto">دانش‌آموز اتباع خارجی هستم (ثبت‌نام با کد یکتا به‌جای کد ملی)</label></div>
+<div id="rf_wrap" class="hide" style="margin-bottom:8px"><label style="display:flex;align-items:center;gap:8px;color:var(--tx)"><input type="checkbox" id="rfx" style="width:auto">دانش‌آموز اتباع خارجی هستم (ثبت‌نام با کد یکتا به‌جای کد ملی)</label></div>
 <label id="rcl"></label><input id="rc" class="ltr" inputmode="numeric" maxlength="10">
 <label style="margin-top:8px">نام</label><input id="rfn">
 <label style="margin-top:8px">نام خانوادگی</label><input id="rln">
@@ -197,6 +197,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 
 <section id="v-chat" class="card hide">
 <select id="chs" class="hide" style="margin-bottom:8px"></select>
+<select id="dm" class="hide" style="margin-bottom:8px"></select>
 <div id="chatlock" class="banner wn hide">گفتگو پس از تأیید مدیر فعال می‌شود.</div>
 <div id="msgs"></div>
 <div id="sp" class="chips hide" style="margin-top:10px"></div>
@@ -213,7 +214,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <h3>همکاران</h3>
 <div class="row" style="margin-bottom:10px">
 <input id="q" placeholder="جستجو: نام، کد ملی، کد پرسنلی…" style="flex:1;min-width:180px">
-<button class="btn sec" id="rf">بازخوانی</button>
+<button class="btn sec" id="rf">حذف فیلتر</button>
 <button class="btn sec" id="cc">پاک‌سازی چت</button>
 <button class="btn sec" id="fl">فقط در انتظار تأیید</button>
 <button class="btn" id="ex">خروجی اکسل (XLSX)</button>
@@ -231,7 +232,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 <div class="row" style="margin-top:8px"><button class="btn sm" id="imp_s_pick">انتخاب فایل اکسل</button><button class="btn sec sm" id="imp_s_tpl">دانلود قالب نمونه</button><button class="btn sec sm" id="imp_s_help">📘 راهنما</button><input type="file" id="imp_s_file" accept=".xlsx" class="hide"></div>
 <div id="imp_s_cnt" style="margin-top:6px;font-size:13px"></div><div id="imp_s_res" style="margin-top:6px;font-size:13px"></div></div>
 <div class="banner">تأیید درخواست‌های ثبت‌نام (همکار و دانش‌آموز) در تب «پنل دبیران» انجام می‌شود.</div>
-<div class="row" style="margin-bottom:10px"><input id="sq" placeholder="جستجو: نام یا کد ملی" style="flex:1;min-width:180px"><button class="btn sec" id="srf">بازخوانی</button><button class="btn" id="sex">خروجی اکسل (XLSX)</button><button class="btn sec" id="sexp">خروجی عکس‌ها</button><button class="btn sec" id="delall_s" style="color:#c0392b">🗑 حذف اطلاعات همه دانش‌آموزان</button></div>
+<div class="row" style="margin-bottom:10px"><input id="sq" placeholder="جستجو: نام یا کد ملی" style="flex:1;min-width:180px"><button class="btn sec" id="srf">حذف فیلتر</button><button class="btn" id="sex">خروجی اکسل (XLSX)</button><button class="btn sec" id="sexp">خروجی عکس‌ها</button><button class="btn sec" id="delall_s" style="color:#c0392b">🗑 حذف اطلاعات همه دانش‌آموزان</button></div>
 <div class="tw"><table><thead><tr><th>ردیف</th><th>عکس</th><th>کد ملی / کد یکتا</th><th>نام</th><th>نام خانوادگی</th><th>نام پدر</th><th>تاریخ تولد</th><th>سریال شناسنامه</th><th>تلفن مادر</th><th>تلفن پدر</th><th>پرونده</th></tr></thead><tbody id="stb"></tbody></table></div>
 </section>
 
@@ -322,16 +323,16 @@ function openLogin(scope){
   }else rg.classList.add('hide');
   aview('a_login');
 }
-function rfSync(){const st=ctx.scope==='student',fr=st&&$('#rf').checked;$('#rcl').textContent=st?(fr?'کد یکتای اتباع خارجی (۱۰ تا ۱۶ رقم)':'کد ملی (۱۰ رقم)'):'کد پرسنلی (۸ رقم)';$('#rc').maxLength=st?(fr?16:10):8}
+function rfSync(){const st=ctx.scope==='student',fr=st&&$('#rfx').checked;$('#rcl').textContent=st?(fr?'کد یکتای اتباع خارجی (۱۰ تا ۱۶ رقم)':'کد ملی (۱۰ رقم)'):'کد پرسنلی (۸ رقم)';$('#rc').maxLength=st?(fr?16:10):8}
 function openReg(schools){
   ctx.regs=schools;const st=ctx.scope==='student';
   $('#ar_title').textContent=st?'ثبت‌نام اولیه دانش‌آموز':'ثبت‌نام اولیه دبیر';
   $('#ar_sch').textContent='مدرسه: '+schools.map(schName).join(' و ');
-  $('#rf').checked=false;$('#rf_wrap').classList.toggle('hide',!st);rfSync();
+  $('#rfx').checked=false;$('#rf_wrap').classList.toggle('hide',!st);rfSync();
   $('#rml').textContent=st?'تلفن همراه ولی (پدر یا مادر)':'تلفن همراه';
   ['rc','rfn','rln','rm'].forEach(i=>$('#'+i).value='');aview('a_reg');
 }
-$('#rf').onchange=rfSync;
+$('#rfx').onchange=rfSync;
 $('#s_print').onclick=()=>printStudentForm(me,me&&me.school);
 $('#go_stu').onclick=()=>openLogin('student');$('#go_tch').onclick=()=>openLogin('teacher');
 
@@ -356,7 +357,7 @@ $('#li').onclick=async()=>{
   catch(e){aerr('اتصال به Supabase برقرار نشد. اینترنت یا فیلترشکن را بررسی کنید.')}};
 $('#pw').onkeydown=e=>{if(e.key==='Enter')$('#li').click()};
 $('#rb').onclick=async()=>{
-  const st=ctx.scope==='student',fr=st&&$('#rf').checked,k=st?'student':'teacher',c=dig($('#rc').value),fn=$('#rfn').value.trim(),ln=$('#rln').value.trim(),m=dig($('#rm').value),e=$('#rerr');e.style.color='#c0392b';e.textContent='';
+  const st=ctx.scope==='student',fr=st&&$('#rfx').checked,k=st?'student':'teacher',c=dig($('#rc').value),fn=$('#rfn').value.trim(),ln=$('#rln').value.trim(),m=dig($('#rm').value),e=$('#rerr');e.style.color='#c0392b';e.textContent='';
   if(st?(fr?!/^\d{10,16}$/.test(c):!validId(c)):!/^\d{8}$/.test(c)){e.textContent=st?(fr?'کد یکتا باید فقط عدد و ۱۰ تا ۱۶ رقم باشد.':'کد ملی معتبر نیست.'):'کد پرسنلی باید دقیقاً ۸ رقم باشد.';return}
   if(!fn||!ln||!m){e.textContent='نام، نام خانوادگی و تلفن همراه را وارد کنید.';return}
   const {data,error}=await sb.rpc('register_person',{p_kind:k,p_code:c,p_first:fn,p_last:ln,p_mobile:m,p_schools:ctx.regs,p_foreign:fr});
@@ -467,7 +468,7 @@ function render(){
   if(me.role==='teacher')renderCoop();
   if(isCre()&&tab==='creator')renderCreator();
   $('#chatlock').classList.toggle('hide',canChat());$('#cf').classList.toggle('hide',!canChat());
-  renderChat();if(isAdm()){renderAdmin();renderStudents()}
+  renderChat();buildDm();if(isAdm()){renderAdmin();renderStudents()}
 }
 
 $('#save').onclick=async()=>{
@@ -487,10 +488,32 @@ $('#save').onclick=async()=>{
 };
 
 // ---- گفتگو ----
-async function loadMsgs(){const {data}=await sb.from('messages').select('*').eq('school',chatSchool).order('created_at',{ascending:false}).limit(200);msgs=(data||[]).reverse()}
+let dmWith=null,dmOpts=[],dmAdmin={};const dmUnread=new Set();
+async function loadMsgs(){const {data}=await sb.from('messages').select('*').eq('school',chatSchool).order('created_at',{ascending:false}).limit(300);
+  const all=(data||[]).reverse();
+  msgs=dmWith?all.filter(m=>m.to_user&&((m.user_id===me.id&&m.to_user===dmWith)||(m.user_id===dmWith&&m.to_user===me.id))):all.filter(m=>!m.to_user)}
+function drawDm(){const sel=$('#dm');if(!sel)return;
+  sel.innerHTML=dmOpts.map(([v,l])=>`<option value="${esc(v)}"${v===(dmWith||'')?' selected':''}>${dmUnread.has(v)?'🔔 ':''}${esc(l)}</option>`).join('');
+  sel.classList.toggle('hide',dmOpts.length<2||!canChat())}
+async function buildDm(){
+  dmOpts=[['','💬 گفتگوی عمومی مدرسه']];
+  try{
+    if(!canChat()||!chatSchool){drawDm();return}
+    if(isAdm()){if(!list.length)await loadList();list.filter(x=>x.mstatus==='approved'&&x.id!==me.id).forEach(x=>dmOpts.push([x.id,'🔒 '+(x.full_name||'دبیر')]))}
+    else{if(dmAdmin[chatSchool]===undefined){const r=await sb.rpc('school_admin_id',{p_school:chatSchool});dmAdmin[chatSchool]=r.data||null}
+      if(dmAdmin[chatSchool])dmOpts.push([dmAdmin[chatSchool],'🔒 گفتگوی خصوصی با مدیر مدرسه'])}
+  }catch(e){}
+  if(dmWith&&!dmOpts.some(o=>o[0]===dmWith))dmWith=null;
+  drawDm()}
+function markDm(other){dmUnread.add(other);drawDm();
+  const nb=document.querySelector('#nav [data-t="chat"]');if(nb&&tab!=='chat'&&!nb.textContent.startsWith('🔔'))nb.textContent='🔔 '+nb.textContent}
+$('#dm').onchange=async()=>{const v=$('#dm').value;dmWith=v||null;dmUnread.delete(v);await loadMsgs();drawDm();renderChat()};
 function subscribe(){
   chan=sb.channel('msgs')
-   .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},p=>{if(p.new.school===chatSchool){msgs.push(p.new);renderChat()}})
+   .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages'},p=>{const n=p.new;if(n.school!==chatSchool)return;
+     if(!n.to_user){if(!dmWith){msgs.push(n);renderChat()}return}
+     const other=n.user_id===me.id?n.to_user:n.user_id;
+     if(dmWith&&other===dmWith){msgs.push(n);renderChat()}else if(n.user_id!==me.id)markDm(other)})
    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'messages'},p=>{const i=msgs.findIndex(z=>z.id===p.new.id);if(i>=0){msgs[i]={...msgs[i],...p.new};renderChat()}})
    .on('postgres_changes',{event:'DELETE',schema:'public',table:'messages'},p=>{msgs=msgs.filter(m=>m.id!==p.old.id);renderChat()})
    .subscribe();
@@ -523,8 +546,8 @@ function renderChat(){
     box.append(d)});
   if(near)box.scrollTop=box.scrollHeight;
 }
-async function sendRow(row){const {error}=await sb.from('messages').insert({...row,school:chatSchool});if(error)alert('ارسال نشد: '+error.message)}
-async function send(){const t=$('#ct').value.trim();if(!t)return;$('#ct').value='';const {error}=await sb.from('messages').insert({body:t,school:chatSchool});if(error)$('#ct').value=t}
+async function sendRow(row){const {error}=await sb.from('messages').insert({...row,school:chatSchool,...(dmWith?{to_user:dmWith}:{})});if(error)alert('ارسال نشد: '+error.message)}
+async function send(){const t=$('#ct').value.trim();if(!t)return;$('#ct').value='';const {error}=await sb.from('messages').insert({body:t,school:chatSchool,...(dmWith?{to_user:dmWith}:{})});if(error)$('#ct').value=t}
 $('#cs').onclick=send;$('#ct').onkeydown=e=>{if(e.key==='Enter')send()};
 const STK=['👍','👏','🙏','❤️','😂','😍','😢','😮','🎉','✅','❌','🌹','📚','✏️','🏫','⏰'];
 $('#sp').innerHTML=STK.map(x=>`<button class="btn sec" data-s="${x}" style="font-size:26px">${x}</button>`).join('');
@@ -691,7 +714,7 @@ function renderStudents(){
   loadThumbs(L);const o=students.find(x=>x.id===sopen);if(o&&o.photo_path)docUrl(o.photo_path).then(u=>{const i=document.getElementById('sph');if(i&&u){i.src=u;i.classList.remove('hide')}});
 }
 $('#sq').oninput=renderStudents;
-$('#srf').onclick=async()=>{await loadList();renderStudents()};
+$('#srf').onclick=async()=>{$('#sq').value='';await loadList();renderStudents()};
 
 // ---- کم‌حجم‌سازی عکس و پاک‌سازی چت ----
 async function shrinkImage(file,max,q){
@@ -856,7 +879,7 @@ $('#coop_copy').onclick=()=>{
   const o=mems.find(x=>x.school!==coopSel&&x.status==='approved');if(!o)return;
   if(!confirm('اطلاعات همکاری از مدرسه '+(SCH[o.school]||{n:''}).n+' در این مدرسه کپی شود؟ سپس روزها و ساعت همکاری را تغییر دهید و ثبت کنید.'))return;
   fillCoopFrom(o.details||{});const e=$('#coop_err');e.style.color='var(--ok)';e.textContent='کپی شد. روزها و ساعت همکاری را اصلاح کنید و «ثبت» را بزنید.'};
-$('#chs').onchange=async()=>{chatSchool=$('#chs').value;await loadMsgs();renderChat()};
+$('#chs').onchange=async()=>{chatSchool=$('#chs').value;dmWith=null;await loadMsgs();renderChat();buildDm()};
 
 // ---- پنل سازنده ----
 const TKEYS=[['g1','پس‌زمینه صفحه (رنگ اول)'],['gm','پس‌زمینه صفحه (رنگ میانی)'],['g2','پس‌زمینه صفحه (رنگ آخر)'],['card','پنل‌ها و کارت‌ها'],['bg','کادر ورودی‌ها و زمینه جزئیات'],['tx','نوشته‌ها'],['mu','نوشته‌های کمرنگ'],['br','حاشیه‌ها'],['pr','دکمه‌ها در حالت عادی (همه دکمه‌ها همرنگ)'],['bt','نوشته روی دکمه‌ها'],['ac','دکمه انتخاب‌شده / فعال (تب فعال و هنگام کلیک)'],['act','نوشته روی دکمه انتخاب‌شده'],['ot','حباب پیام دیگران و برچسب‌ها'],['me','حباب پیام‌های خودم'],['ok','پیام موفقیت و تأیید'],['wn','پیام هشدار و در انتظار'],['sl','نوشته نام مدرسه بالای صفحه'],['ft','نوشته پایین صفحه (سازنده)']];
@@ -1301,7 +1324,7 @@ function renderAdmin(){
   if(open){loadAdminDocs(open);const t=list.find(x=>x.id===open);if(t&&t.photo_path)docUrl(t.photo_path).then(u=>{const i=document.getElementById('tph');if(i&&u){i.src=u;i.classList.remove('hide')}})}
 }
 $('#q').oninput=renderAdmin;$('#fl').onclick=()=>{onlyPending=!onlyPending;renderAdmin()};
-$('#rf').onclick=async()=>{await loadList();renderAdmin()};
+$('#rf').onclick=async()=>{$('#q').value='';onlyPending=false;await loadList();renderAdmin()};
 // ---- ارقام فارسی در تمام صفحه ----
 const faTxt=n=>{if(n.nodeType===3){const t=n.nodeValue,u=fa(t);if(u!==t)n.nodeValue=u}else if(n.nodeType===1&&!['SCRIPT','STYLE','TEXTAREA','INPUT','SELECT'].includes(n.tagName))n.childNodes.forEach(faTxt)};
 new MutationObserver(ms=>ms.forEach(m=>{m.addedNodes.forEach(faTxt);if(m.type==='characterData')faTxt(m.target)})).observe(document.body,{childList:true,subtree:true,characterData:true});
