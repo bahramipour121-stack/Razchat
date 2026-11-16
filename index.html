@@ -237,6 +237,7 @@ th,td{padding:8px;border-bottom:1px solid var(--br);text-align:right;vertical-al
 </section>
 
 <section id="v-acct" class="card hide">
+<div id="appdl" class="banner hide" style="margin-bottom:12px"></div>
 <h3 style="margin-top:0">تغییر رمز عبور</h3>
 <div class="grid" style="max-width:600px">
 <div><label>رمز جدید (حداقل ۸ نویسه)</label><input id="np1" type="password" class="ltr" autocomplete="new-password"></div>
@@ -468,7 +469,7 @@ function render(){
   if(me.role==='teacher')renderCoop();
   if(isCre()&&tab==='creator')renderCreator();
   $('#chatlock').classList.toggle('hide',canChat());$('#cf').classList.toggle('hide',!canChat());
-  renderChat();buildDm();if(isAdm()){renderAdmin();renderStudents()}
+  renderChat();buildDm();if(tab==='acct')loadAppDl();if(isAdm()){renderAdmin();renderStudents()}
 }
 
 $('#save').onclick=async()=>{
@@ -488,6 +489,14 @@ $('#save').onclick=async()=>{
 };
 
 // ---- گفتگو ----
+async function loadAppDl(){const el=$('#appdl');if(!el)return;
+  if(!me||!['teacher','admin'].includes(me.role)){el.classList.add('hide');return}
+  const r=await sb.from('app_files').select('*').eq('kind','android').order('created_at',{ascending:false}).limit(1);const a=(r.data||[])[0];
+  if(!a||(!a.file_path&&!a.activation_url)){el.classList.add('hide');return}
+  el.classList.remove('hide');
+  el.innerHTML=`<b>📱 اپلیکیشن اندروید پورتال</b><div style="margin-top:6px">نسخه: ${esc(a.version||'—')}${a.file_path?' | حجم: '+(a.size/1048576).toFixed(1)+' مگابایت':''}</div>${a.notes?`<div style="margin-top:4px">${esc(a.notes)}</div>`:''}${a.file_path?`<div style="font-size:12px;margin:6px 0;color:var(--mu)">پس از دانلود، فایل را باز کنید. اگر اندروید پیغام «نصب از منبع ناشناس» داد، برای همین فایل اجازه نصب بدهید.</div>`:''}<div class="row" style="margin-top:8px">${a.file_path?'<button class="btn sm" id="appdl_b">دانلود فایل نصب (APK)</button>':''}${a.activation_url?'<button class="btn sm" id="appact_b">🔑 فعال‌سازی اپلیکیشن</button>':''}</div>`;
+  if(a.file_path)$('#appdl_b').onclick=async()=>{const {data,error}=await sb.storage.from('app-files').createSignedUrl(a.file_path,300,{download:a.file_name||'portal.apk'});if(error||!data){alert('دانلود ممکن نشد: '+(error?error.message:''));return}location.href=data.signedUrl};
+  if(a.activation_url)$('#appact_b').onclick=()=>{window.open(a.activation_url,'_blank','noopener')}}
 let dmWith=null,dmOpts=[],dmAdmin={};const dmUnread=new Set();
 async function loadMsgs(){const {data}=await sb.from('messages').select('*').eq('school',chatSchool).order('created_at',{ascending:false}).limit(300);
   const all=(data||[]).reverse();
@@ -890,11 +899,13 @@ const TPRE={
  gray:{g1:'#1c1f24',gm:'#3a4049',g2:'#23272d',card:'#dfe3e8',bg:'#f1f3f5',tx:'#1f2430',mu:'#55606e',br:'#aab2bd',pr:'#4b5563',bt:'#ffffff',ac:'#e8a317',act:'#1f2430',ot:'#e8ebef',me:'#cfd6df',ok:'#117a45',wn:'#a15c07',sl:'#ffffff',ft:'#e5e9ee'}};
 async function renderCreator(){
   await loadSchools();
+  const apq=await sb.from('app_files').select('*').eq('kind','android').order('created_at',{ascending:false}).limit(1);const cur=(apq.data||[])[0];
   const ad=await sb.from('profiles').select('id,admin_school,username,full_name').eq('role','admin');const admins=ad.data||[];
   $('#cr_stats').innerHTML='<b>مدارس تعریف‌شده</b> – هر مدرسه پس از «فعال کردن» در صفحه اول نمایش داده می‌شود و ثبت‌نام و ورود مدیرش ممکن می‌شود.';
   const T=THEME||{},D=TPRE.blue;
   const sw=(i,l)=>`<div><label>${l}</label><div class="row" style="flex-wrap:nowrap"><input type="color" id="th_${i}" value="${esc(T[i]||D[i])}" style="width:46px;padding:2px;flex:none"><input id="thx_${i}" class="ltr" value="${esc(T[i]||D[i])}" maxlength="7"></div></div>`;
   let h=`<div class="banner"><b>رنگ‌بندی برنامه</b><div style="font-size:13px;color:#b80a0a;border:1px solid var(--br);border-radius:8px;padding:8px 10px;margin:8px 0">تغییر رنگ‌ها برای همه کاربران اعمال می‌شود. اگر رنگ‌ها ناخوانا شد، «بازگشت به پیش‌فرض» را بزنید یا آدرس سایت را با <span dir="ltr">?reset-theme</span> در انتها باز کنید.</div><div class="row" style="margin-bottom:8px">${[['blue','آبی تیره (پیش‌فرض)'],['green','سبز'],['purple','بنفش'],['gray','خاکستری']].map(([k,l])=>`<button class="btn sm" data-pre="${k}">${l}</button>`).join('')}</div><div class="row" style="margin-bottom:10px"><input id="th_title" value="${esc(T.title||'')}" placeholder="عنوان بالای صفحه (پیش‌فرض: پورتال مدارس)" style="max-width:340px"></div><div class="grid">${TKEYS.map(([i,l])=>sw(i,l)).join('')}</div><div class="row" style="margin-top:12px"><button class="btn" id="th_save">ذخیره برای همه کاربران</button><button class="btn" id="th_reset">بازگشت به پیش‌فرض</button></div><div style="font-size:12px;margin-top:8px">رنگ هر مدرسه (در کارت همان مدرسه) رنگ دکمه‌ها را فقط برای اعضای همان مدرسه عوض می‌کند.</div></div>`;
+  h+=`<div class="banner"><b>📱 اپلیکیشن اندروید (APK)</b><div style="font-size:13px;color:var(--mu);margin:4px 0 8px">فایل نصب و لینک فعال‌سازی اپلیکیشن را اینجا ثبت کنید تا مدیران و دبیران از تب «حساب» خود ببینند. فایل حداکثر ۵۰ مگابایت و فقط .apk. لینک فعال‌سازی باید با https:// شروع شود. هر کدام را می‌توانید جداگانه ثبت کنید.</div>${cur&&cur.file_path?`<div style="margin-bottom:8px">فایل فعلی: <b dir="ltr">${esc(cur.file_name)}</b> | ${(cur.size/1048576).toFixed(1)} مگابایت <button class="btn sec sm" id="app_del">حذف فایل</button></div>`:'<div style="margin-bottom:8px">هنوز فایلی بارگذاری نشده است.</div>'}<div class="grid"><div><label>فایل APK ${cur&&cur.file_path?'(برای جایگزینی انتخاب کنید)':''}</label><input type="file" id="app_f" accept=".apk"></div><div><label>نسخه (مثال: 1.2.0)</label><input id="app_v" value="${esc(cur?cur.version:'')}" maxlength="40"></div><div><label>توضیحات</label><input id="app_n" value="${esc(cur?cur.notes:'')}" maxlength="500"></div><div><label>لینک فعال‌سازی اپلیکیشن</label><input id="app_a" class="ltr" placeholder="https://..." value="${esc(cur?cur.activation_url:'')}" maxlength="500"></div></div><div class="row" style="margin-top:8px"><button class="btn" id="app_up">ذخیره</button></div><div id="app_m" style="margin-top:6px;min-height:20px"></div></div>`;
   h+=`<div class="banner"><b>افزودن مدرسه جدید</b><div class="row" style="margin-top:8px"><input id="ns_n" placeholder="نام مدرسه" style="max-width:240px"><input id="ns_s" placeholder="شیفت (اختیاری، مثل شیفت صبح)" style="max-width:220px"><button class="btn sm" id="ns_add">افزودن (به‌صورت غیرفعال)</button></div></div>`;
   for(const k of Object.keys(SCH)){const s0=SCH[k];
     const a=await sb.from('profiles').select('id',{count:'exact',head:true}).eq('role','student').eq('school',k);
@@ -927,6 +938,24 @@ async function renderCreator(){
   $('#th_reset').onclick=async()=>{if(!confirm('رنگ‌ها و عنوان به حالت پیش‌فرض برگردد؟'))return;const {error}=await sb.rpc('creator_save_theme',{p:{}});if(error)return fail(error);THEME={};applyTheme();renderCreator()};
   box.querySelectorAll('[data-cc]').forEach(b=>b.onclick=async()=>{const k=b.dataset.cc;const {error}=await sb.rpc('creator_set_school_color',{p_code:k,p_color:$('#ec_'+k).value});if(error)return fail(error);await loadSchools();renderHome();renderCreator()});
   box.querySelectorAll('[data-cx]').forEach(b=>b.onclick=async()=>{const {error}=await sb.rpc('creator_set_school_color',{p_code:b.dataset.cx,p_color:null});if(error)return fail(error);await loadSchools();renderHome();renderCreator()});
+  const am=t=>{$('#app_m').textContent=t};
+  $('#app_up').onclick=async()=>{const f=$('#app_f').files[0],bt=$('#app_up'),url=$('#app_a').value.trim();
+    if(f&&!/\.apk$/i.test(f.name)){am('فقط فایل .apk پذیرفته می‌شود.');return}
+    if(f&&f.size>50*1024*1024){am('حجم فایل بیش از ۵۰ مگابایت است (حد طرح رایگان).');return}
+    if(url&&!/^https:\/\/[^\s]+$/i.test(url)){am('لینک فعال‌سازی باید با https:// شروع شود و فاصله نداشته باشد.');return}
+    if(!f&&!url&&!(cur&&cur.file_path)){am('فایل یا لینک فعال‌سازی را وارد کنید.');return}
+    bt.disabled=true;let path=cur?cur.file_path:null,name=cur?cur.file_name:'',size=cur?cur.size:0,np=null;
+    if(f){am('در حال بارگذاری فایل… لطفاً صفحه را نبندید.');np='android/'+Date.now()+'.apk';
+      const up=await sb.storage.from('app-files').upload(np,f,{contentType:'application/vnd.android.package-archive'});
+      if(up.error){bt.disabled=false;am('بارگذاری انجام نشد: '+up.error.message);return}
+      path=np;name=f.name.slice(0,120);size=f.size}
+    const row={kind:'android',version:$('#app_v').value.trim(),notes:$('#app_n').value.trim(),activation_url:url,file_path:path,file_name:name||'',size:size||0};
+    const er=cur?(await sb.from('app_files').update(row).eq('id',cur.id)).error:(await sb.from('app_files').insert(row)).error;
+    if(er){if(np)await sb.storage.from('app-files').remove([np]);bt.disabled=false;am('ثبت انجام نشد: '+er.message);return}
+    if(np&&cur&&cur.file_path)await sb.storage.from('app-files').remove([cur.file_path]);
+    alert('ذخیره شد.');renderCreator()};
+  if($('#app_del'))$('#app_del').onclick=async()=>{if(!confirm('فایل اپلیکیشن حذف شود؟ لینک فعال‌سازی باقی می‌ماند.'))return;
+    await sb.storage.from('app-files').remove([cur.file_path]);const {error}=await sb.from('app_files').update({file_path:null,file_name:'',size:0}).eq('id',cur.id);if(error)return fail(error);renderCreator()};
   box.querySelectorAll('[data-si]').forEach(b=>b.onclick=async()=>{const k=b.dataset.si,o={};['level','office','province','code','phone','address'].forEach(f=>{const v=$('#ei_'+k+'_'+f).value.trim();if(v)o[f]=v});
     const {error}=await sb.rpc('creator_set_school_info',{p_code:k,p_info:o});if(error)return fail(error);await loadSchools();alert('ذخیره شد.');renderCreator()});
   box.querySelectorAll('[data-sd]').forEach(b=>b.onclick=async()=>{const k=b.dataset.sd;
