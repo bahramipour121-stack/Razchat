@@ -492,11 +492,15 @@ $('#save').onclick=async()=>{
 async function loadAppDl(){const el=$('#appdl');if(!el)return;
   if(!me||!['teacher','admin'].includes(me.role)){el.classList.add('hide');return}
   const r=await sb.from('app_files').select('*').eq('kind','android').order('created_at',{ascending:false}).limit(1);const a=(r.data||[])[0];
-  if(!a||(!a.file_path&&!a.activation_url)){el.classList.add('hide');return}
+  const lk=a&&/^https?:\/\//i.test(a.activation_url||'')?a.activation_url:'';
+  if(!a||(!a.file_path&&!lk)){el.classList.add('hide');return}
   el.classList.remove('hide');
-  el.innerHTML=`<b>📱 اپلیکیشن اندروید پورتال</b><div style="margin-top:6px">نسخه: ${esc(a.version||'—')}${a.file_path?' | حجم: '+(a.size/1048576).toFixed(1)+' مگابایت':''}</div>${a.notes?`<div style="margin-top:4px">${esc(a.notes)}</div>`:''}${a.file_path?`<div style="font-size:12px;margin:6px 0;color:var(--mu)">پس از دانلود، فایل را باز کنید. اگر اندروید پیغام «نصب از منبع ناشناس» داد، برای همین فایل اجازه نصب بدهید.</div>`:''}<div class="row" style="margin-top:8px">${a.file_path?'<button class="btn sm" id="appdl_b">دانلود فایل نصب (APK)</button>':''}${a.activation_url?'<button class="btn sm" id="appact_b">🔑 فعال‌سازی اپلیکیشن</button>':''}</div>`;
+  el.innerHTML=`<b>📱 اپلیکیشن اندروید پورتال</b><div style="margin-top:6px">نسخه: ${esc(a.version||'—')}${a.file_path?' | حجم: '+(a.size/1048576).toFixed(1)+' مگابایت':''}</div>${a.notes?`<div style="margin-top:4px">${esc(a.notes)}</div>`:''}${a.file_path?`<div style="font-size:12px;margin:6px 0;color:var(--mu)">پس از دانلود، فایل را باز کنید. اگر اندروید پیغام «نصب از منبع ناشناس» داد، برای همین فایل اجازه نصب بدهید.</div>`:''}${lk?`<div style="margin-top:10px"><b>لینک فعال‌سازی:</b><div class="row" style="margin-top:4px;flex-wrap:nowrap;align-items:center"><a href="${esc(lk)}" target="_blank" rel="noopener noreferrer" dir="ltr" style="flex:1;min-width:0;word-break:break-all;color:var(--pr)">${esc(lk)}</a><button class="btn sm" id="appcp" type="button" style="flex:none">کپی لینک</button></div></div>`:''}<div class="row" style="margin-top:8px">${a.file_path?'<button class="btn sm" id="appdl_b">دانلود فایل نصب (APK)</button>':''}${lk?'<button class="btn sm" id="appact_b">🔑 فعال‌سازی اپلیکیشن</button>':''}</div>`;
   if(a.file_path)$('#appdl_b').onclick=async()=>{const {data,error}=await sb.storage.from('app-files').createSignedUrl(a.file_path,300,{download:a.file_name||'portal.apk'});if(error||!data){alert('دانلود ممکن نشد: '+(error?error.message:''));return}location.href=data.signedUrl};
-  if(a.activation_url)$('#appact_b').onclick=()=>{window.open(a.activation_url,'_blank','noopener')}}
+  if(lk)$('#appact_b').onclick=()=>{window.open(lk,'_blank','noopener')};
+  if(lk)$('#appcp').onclick=async()=>{const b=$('#appcp');let ok=false;
+    try{await navigator.clipboard.writeText(lk);ok=true}catch(e){const t=document.createElement('textarea');t.value=lk;document.body.append(t);t.select();try{ok=document.execCommand('copy')}catch(e2){}t.remove()}
+    b.textContent=ok?'کپی شد ✓':'کپی نشد؛ دستی کپی کنید';setTimeout(()=>{b.textContent='کپی لینک'},1800)}}
 let dmWith=null,dmOpts=[],dmAdmin={};const dmUnread=new Set();
 async function loadMsgs(){const {data}=await sb.from('messages').select('*').eq('school',chatSchool).order('created_at',{ascending:false}).limit(300);
   const all=(data||[]).reverse();
